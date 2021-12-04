@@ -31,3 +31,20 @@ run ./exploit.c
 
 If done correctly, you should now be root.
 flag1.txt is located in /home/matt/
+
+
+Task 6 {Privilege Escalation - Sudo}
+
+Question 1:  How many programs can the user "karen" run on the target system with sudo rights?
+{Hint: sudo -l}
+
+Question 2: What is the content of the flag2.txt file?
+{Hint: sudo nano}
+
+Question 3: How would you use Nmap to spawn a root shell if your user had sudo rights on nmap?
+{Hint: Search for nmap on https://gtfobins.github.io/}
+
+Question 4: What is the hash of frank's password?
+{Hint: sudo nano /etc/shadow}
+
+
