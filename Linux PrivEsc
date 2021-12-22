@@ -129,8 +129,8 @@ Question 2: What is the content of the flag6.txt file?
 {{Hint}}
 
 Navigate to the /tmp/ folder and add it to the path: "export PATH=/tmp:$PATH"
-Create the executable: echo /bin/bash > thm
-chmod 777 thm
+Create the executable: "echo /bin/bash > thm"
+"chmod 777 thm"
 Next, navigate to the odd folder in Question 1, and run the test script to get root: "./test"
 
 
