@@ -152,7 +152,7 @@ Question 3: What is the content of the flag7.txt file?
 {{Hint}}
 On your machine:
 sudo mkdir [foldername]
-mount -o rw [victim IP]:/home/ubuntu/sharedfolder pathtothe/folderyoumade
+mount -o rw [victim IP]:/home/ubuntu/sharedfolder /pathtothe/folderyoumade
 cd into the folder
 
 Next, create the exploit:
