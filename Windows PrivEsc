@@ -1,0 +1,16 @@
+Windows PrivEsc - Task 2 {Information Gathering}
+
+Question 1:  List users on the target system. One of them resembles a flag. 
+{{Hint: net users}}
+
+Question 2: What is the OS version of the target machine?
+{{Hint: systeminfo}}
+
+Question 3: When was security update KB4562562 installed?
+{{Hint: wmic qfe get HotFixID,InstalledOn | find "KB4562562"}}
+
+Question 4: What is the state of Windows Defender? 
+{{Hint: sc query windefend}}
+
+
+Task 4 {Vulnerable Software}
