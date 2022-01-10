@@ -14,3 +14,23 @@ Question 4: What is the state of Windows Defender?
 
 
 Task 4 {Vulnerable Software}
+
+Question 1:  What version of a Fitbit application can you see installed?
+{{Hint}}
+To find the name of the app:
+wmic service list brief | findstr "Fit"
+To find the version:
+wmic product where "name='(Name of the Fitbit app, no parenthesis)'" get version
+
+Question 2: What kind of vulnerability seems to affect the Fitbit application?
+{{Hint: If you search for fitbit on exploit-db, it's the only one}}
+
+Question 3: What version of FoxitReader is installed on the target system?
+{{Hint}}
+In Explorer, go to C:\Program Files (x86)\Foxit Software\Foxit Reader
+Right click "Foxit Reader" (Application) > Properties > Details
+
+
+Task 5 {DLL Hijacking}
+
+
