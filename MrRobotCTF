@@ -16,7 +16,7 @@ PORT    STATE  SERVICE  VERSION
 
 Head over to the webpage at http://[machine IP] and check out all of the options presented to you.
 
-For enumeration's sake, when viewing the source of the page, we discover it is running wordpress.
+Make note, when viewing the source of the page, we discover it is running wordpress.
 
 Gobuster Scan using the Dirb common wordlist (if you do not have it on your machine, 
 you can get it here: https://github.com/v0re/dirb/blob/master/wordlists/common.txt)
