@@ -159,7 +159,7 @@ Grab key 2 of 3 in /home/robot/
 
 Next, we should elevate our permissions and try and obtain root.
 
-Trying sudo -l only tells us we don'y have permission to run sudo.
+Trying sudo -l only tells us we don't have permission to run sudo.
 
 What about files with SUID set?
 
