@@ -1,0 +1,90 @@
+Mr Robot CTF Walkthrough
+
+Initial Nmap Scan:
+
+nmap -sV -T4 [machine IP]
+Starting Nmap 7.80 ( https://nmap.org ) at 2022-01-17 13:41 EST
+Nmap scan report for 10.10.254.18
+Host is up (0.15s latency).
+Not shown: 997 filtered ports
+PORT    STATE  SERVICE  VERSION
+22/tcp  closed ssh
+80/tcp  closed http
+443/tcp open   ssl/http Apache httpd
+
+Head over to the webpage at http://[machine IP] and check out all of the options presented to you.
+
+For enumeration's sake, when viewing the source of the page, we discover it is running wordpress.
+
+Gobuster Scan using the Dirb common wordlist (if you do not have it on your machine, 
+you can get it here: https://github.com/v0re/dirb/blob/master/wordlists/common.txt)
+
+gobuster -u http://[machine IP] -w dirbcommon.txt 
+
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://[machine IP]
+[+] Threads      : 10
+[+] Wordlist     : dirbcommon.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Timeout      : 10s
+=====================================================
+2022/01/17 14:04:37 Starting gobuster
+=====================================================
+/.hta (Status: 403)
+/.htaccess (Status: 403)
+/.htpasswd (Status: 403)
+/0 (Status: 301)
+/admin (Status: 301)
+/atom (Status: 301)
+/audio (Status: 301)
+/blog (Status: 301)
+/css (Status: 301)
+/dashboard (Status: 302)
+/favicon.ico (Status: 200)
+/feed (Status: 301)
+/image (Status: 301)
+/Image (Status: 301)
+/images (Status: 301)
+/index.html (Status: 200)
+/index.php (Status: 301)
+/intro (Status: 200)
+/js (Status: 301)
+/license (Status: 200)
+/login (Status: 302)
+/page1 (Status: 301)
+/phpmyadmin (Status: 403)
+/rdf (Status: 301)
+/readme (Status: 200)
+/robots (Status: 200)
+/robots.txt (Status: 200)
+/rss (Status: 301)
+/rss2 (Status: 301)
+/sitemap (Status: 200)
+/sitemap.xml (Status: 200)
+/video (Status: 301)
+/wp-admin (Status: 301)
+/wp-content (Status: 301)
+/wp-config (Status: 200)
+/wp-cron (Status: 200)
+/wp-includes (Status: 301)
+/wp-load (Status: 200)
+/wp-links-opml (Status: 200)
+/wp-login (Status: 200)
+/wp-signup (Status: 302)
+
+
+Visit /robots.txt, and we find the way to the first key at /key-1-of-3.txt
+Grab the fsociety.dic file as well. Open it, and we get what appears to be a wordlist.
+
+The only other page that appears worthwhile is the login page. When trying different usernames, we are met with some ERROR: Invalid Username 
+prompts that we can use to enumerate the correct username. 
+Using this method with various names from Mr. Robot, we eventually discover that
+"Elliot" works, by telling us that the password for user Elliot is incorrect. 
+
+Next, using the wordlist fsociety.dic, let's fire up hydra to brute force the password:
+Open Burpsuite and intercept the request of the log in.
+
+(courtesy save)
