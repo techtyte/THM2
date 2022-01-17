@@ -182,8 +182,7 @@ find / -type f -perm -04000 -ls 2>/dev/null
 
 nmap seems to be the only option.
 
-However, I had no luck with the options on gtfobins, so I looked elsewhere and found this site:
-https://www.adamcouch.co.uk/linux-privilege-escalation-setuid-nmap/
+Go to gtfobins, and follow the directions under "shell (option b):
 
 Run:
 nmap --interactive
