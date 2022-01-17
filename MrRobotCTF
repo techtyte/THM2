@@ -118,6 +118,30 @@ nc -lvnp [port]
 
 Once uploaded, activate the plugin and catch the shell.
 
+In the wp-config.php file, we find some interesting credentials for MySQL and FTP:
+
+// ** MySQL settings - You can get this info from your web host ** //
+/** The name of the database for WordPress */
+define('DB_NAME', 'bitnami_wordpress');
+
+/** MySQL database username */
+define('DB_USER', 'bn_wordpress');
+
+/** MySQL database password */
+define('DB_PASSWORD', '570fd42948');
+
+
+define('FTP_USER', 'bitnamiftp');
+define('FTP_PASS', 'inevoL7eAlBeD2b5WszPbZ2gJ971tJZtP0j86NYPyh6Wfz1x8a');
+
+We'll save this incase they're needed. 
+
+Checking out /home/, we see one user whose name is "robot".
+Key-2-of-3 is in there, but we get a permission denied when we try and read it.
+There is one more file in this user's folder, which is password.raw-md5. Opening it reveals:
+robot:c3fcd3d76192e4007dfb496cca67e13b
+
+Put the hash into crackstation, and we get the password:
+abcdefghijklmnopqrstuvwxyz
+
 (courtesy save)
-
-
