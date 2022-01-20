@@ -26,13 +26,13 @@ Answer: ssh
 Question 4: Find directories on the web server using the Gobuster tool
 No Answer needed
 
-Syntax: gobuster dir -u 10.10.27.12:80 -t 250 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+Syntax: gobuster dir -u [machine IP]:80 -t 250 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
 Output:
 ===============================================================
 Gobuster v3.1.0
 by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 ===============================================================
-[+] Url:                     http://10.10.27.12:80
+[+] Url:                     http://[machine IP]:80
 [+] Method:                  GET
 [+] Threads:                 250
 [+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
