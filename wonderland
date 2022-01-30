@@ -47,7 +47,7 @@ Keep Going.
 When viewing the source code of the page, there is a path to the image of the white rabbit:
 <img src="/img/white_rabbit_1.jpg" 
 
-Going to [machine IP]\img\, we are presented with three different images. Save each one.
+Going to [machine IP]/img/, we are presented with three different images. Save each one.
 alice_door.jpg
 alice_door.png
 white_rabbit_1.jpg
