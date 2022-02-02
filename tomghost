@@ -123,7 +123,7 @@ If we try to decrypt it with the key, we still get prompted for a passphrase.
 
 Transfer the files over to your machine so we can crack it.
 
-scp skyfuck@10.10.208.117:tryhackme.asc /your/folder/
+scp skyfuck@[machine IP]:tryhackme.asc /your/folder/
 
 Next, use gpg2john:
 
