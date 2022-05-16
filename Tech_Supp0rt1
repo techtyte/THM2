@@ -2,7 +2,7 @@
 
 [NMAP SCAN]
 
-nmap -T4 -sV [machine IP]
+nmap -T4 -sV -p- [machine IP]
 Starting Nmap 7.80 ( https://nmap.org ) at 2022-04-26 23:12 EDT
 Stats: 0:00:27 elapsed; 0 hosts completed (1 up), 1 undergoing Service Scan
 Service scan Timing: About 75.00% done; ETC: 23:12 (0:00:04 remaining)
