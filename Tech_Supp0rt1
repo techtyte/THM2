@@ -124,7 +124,7 @@ Wordpress creds
 
 "Cooked with magical formula" makes me think of the Magic option from cyberchef. Let's give it a shot.
 >Go to cyberchef.io
->Paste the stringe following "admin:" into the Input
+>Paste the string following "admin:" into the Input
 >Search under "Operations" for "Magic" and drag it into the Recipe space.
 
 The first result tells us the recipe:
@@ -228,7 +228,7 @@ define( 'DB_USER', 'support' );
 define( 'DB_PASSWORD', '(xx Real Password Here xx' );
 
 
-I couldn't get mysql to work within the dumb shell, so I decided to try this password elsewhere.
+I decided to try this password elsewhere.
 
 ssh scamsite@[machine IP] - and we are successful!
 
