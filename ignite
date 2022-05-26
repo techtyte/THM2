@@ -10,17 +10,11 @@
 
 [NMAP]
 
-nmap -sV -T4 10.10.120.210
+nmap -sV -T4 [machine IP]
 Starting Nmap 7.92 ( https://nmap.org ) at 2022-05-25 22:35 UTC
-Stats: 0:00:04 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
-Connect Scan Timing: About 0.47% done
-Stats: 0:01:45 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
-Connect Scan Timing: About 16.81% done; ETC: 22:46 (0:08:35 remaining)
-Warning: 10.10.120.210 giving up on port because retransmission cap hit (6).
-Stats: 0:12:02 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
-Connect Scan Timing: About 96.71% done; ETC: 22:48 (0:00:25 remaining)
-Nmap scan report for 10.10.120.210
-Host is up (0.22s latency).
+tl;dr....
+
+
 Not shown: 65519 closed tcp ports (conn-refused)
 PORT      STATE    SERVICE          VERSION
 80/tcp    open     http             Apache httpd 2.4.18 ((Ubuntu))
