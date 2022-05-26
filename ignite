@@ -28,9 +28,10 @@ PORT      STATE    SERVICE          VERSION
 Visiting http://[machine IP]:80 shows us a Welcome to Fuel CMS
 Version 1.4 default page.
 
-Looking into an exploit for Fuel CMS, I found this: https://www.exploit-db.com/exploits/50477 - an RCE
+Looking into an exploit for Fuel CMS, I found this: https://www.exploit-db.com/exploits/50477 - an RCE.
+Download it to your machine and use with:
 
-Syntax: python3 50477.py -u http://[machine IP]
+python3 50477.py -u http://[machine IP]
 
 And we should see:
 [+]Connecting...
