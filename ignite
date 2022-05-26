@@ -74,4 +74,4 @@ $db['default'] = array(
         'failover' => array(),
         'save_queries' => TRUE
 
-We can now login as root! Enter su root and enter the password ~ congrats!
+We can now login as root! Enter su root and enter the password ~ congrats! Flag is in /root/
