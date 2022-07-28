@@ -1,0 +1,61 @@
+ ██████╗ ██████╗ ███╗   ███╗███╗   ███╗██╗████████╗████████╗███████╗██████╗ 
+██╔════╝██╔═══██╗████╗ ████║████╗ ████║██║╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+██║     ██║   ██║██╔████╔██║██╔████╔██║██║   ██║      ██║   █████╗  ██║  ██║
+██║     ██║   ██║██║╚██╔╝██║██║╚██╔╝██║██║   ██║      ██║   ██╔══╝  ██║  ██║
+╚██████╗╚██████╔╝██║ ╚═╝ ██║██║ ╚═╝ ██║██║   ██║      ██║   ███████╗██████╔╝
+ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝╚═╝   ╚═╝      ╚═╝   ╚══════╝╚═════╝ 
+                                                                         
+                 https://tryhackme.com/room/committed
+                                                                            
+
+Starting with the in-browser VM, unzip the file called "committed"
+
+The first place I looked into was /logs/, which contains a file called HEAD and a directory called refs. If we cat out HEAD, we see this entry:
+
+3a8cc16f919b8ac43651d68dceacbb28ebb9b625 c56c470a2a9dfb5cfbd54cd614a9fdb1644412b5 fumenoid <fumenoid@gmail.com> 1644741999 -0800	commit: Oops
+
+Show this commit to get the flag:
+
+ubuntu@thm-comitted:~/commited/commited/.git/logs$ git show 3a8cc16f919b8ac43651d68dceacbb28ebb9b625
+commit 3a8cc16f919b8ac43651d68dceacbb28ebb9b625
+Author: fumenoid <fumenoid@gmail.com>
+Date:   Sun Feb 13 00:45:14 2022 -0800
+
+    DB check
+
+diff --git a/main.py b/main.py
+index 161979c..54d0271 100644
+--- a/main.py
++++ b/main.py
+@@ -3,8 +3,8 @@ import mysql.connector
+ def create_db():
+     mydb = mysql.connector.connect(
+     host="localhost",
+-    user="", # Username Goes Here
+-    password="" # Password Goes Here
++    user="root", # Username Goes Here
++    password="flag{xxRedactedxx}" # Password Goes Here
+     )
+ 
+     mycursor = mydb.cursor()
+@@ -15,8 +15,8 @@ def create_db():
+ def create_tables():
+     mydb = mysql.connector.connect(
+     host="localhost",
+-    user="", #username Goes here
+-    password="", #password Goes here
++    user="root", #username Goes here
++    password="flag{xxRedactedxx}", #password Goes here
+     database="commited"
+     )
+ 
+@@ -28,8 +28,8 @@ def create_tables():
+ def populate_tables():
+     mydb = mysql.connector.connect(
+     host="localhost",
+-    user="",
+-    password="",
++    user="root",
++    password="flag{xxRedactedxx}",
+     database="commited"
+     )
