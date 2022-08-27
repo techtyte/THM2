@@ -62,7 +62,8 @@ if (!strpos($target_file, ".pdf")) {
 
 -->
 
-I tried changing the magic byte in my shell, changed the file extensions, changed MIME types and various other things in burpsuite, but still received the same message as above. I think everything leads to the same response.
+I tried changing the magic byte in my shell, changed the file extensions, changed MIME types and various other things in burpsuite, but still received 
+the same message as above. I think everything leads to the same response.
 
 Eventually I tried /cvs/shell.pdf.php, looking for my shell and got what looks to be the other hacker's shell. All the page says is "boom!"
 
@@ -79,7 +80,8 @@ I enumerated around the system using ls ../../../ etc., until I found the user "
 
 [Reverse shell]
 
-I tried various bash one liner reverse shells to no avail. I decided to try the command "which python", which gave no reply, and "which perl" to which it said:
+I tried various bash one liner reverse shells to no avail. I decided to try the command "which python", which gave no reply, and "which perl" 
+to which it said:
 
 /usr/bin/perl/
 
