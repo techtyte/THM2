@@ -7,7 +7,7 @@
                                                                                           
                       https://tryhackme.com/room/plottedtms
                       
-[NMAP Scan]
+[[[ENUMERATION]]]
 
 nmap -sV -T4 [machine IP]
 Starting Nmap 7.92 ( https://nmap.org ) at 2022-08-27 21:45 UTC
@@ -113,6 +113,8 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 
 One of these will come in handy later. But for now, back to the login page to test for SQLi.
 
+[[[WEB SHELL]]]
+
 Using Burpsuite, I intercepted the login request and sent the request to Intruder with attack type set to Sniper.
 I left the password blank, and set the position to only test the username input.
 Your request should look like this:
@@ -172,6 +174,7 @@ Start a listener before executing this with nc:
 
 nc -lvnp port#
 
+[[[PORT_ADMIN]]]
 
 I found some credentials in a file called initialize.php:
 
@@ -262,6 +265,8 @@ bash: no job control in this shell
 plot_admin@plotted:~$ 
 
 And success! User.txt is in plot_admin's home folder.
+
+[[[GAINING ROOT]]]
 
 I tried sudo -l for sudo permissions and was unable to since I do not know plot_admin's password, and then checked SUID,
 to which I found one I have not seen before:
