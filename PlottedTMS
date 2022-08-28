@@ -7,7 +7,12 @@
                                                                                           
                       https://tryhackme.com/room/plottedtms
                       
-[[[ENUMERATION]]]
+  _____                                      _   _             
+ | ____|_ __  _   _ _ __ ___   ___ _ __ __ _| |_(_) ___  _ __  
+ |  _| | '_ \| | | | '_ ` _ \ / _ \ '__/ _` | __| |/ _ \| '_ \ 
+ | |___| | | | |_| | | | | | |  __/ | | (_| | |_| | (_) | | | |
+ |_____|_| |_|\__,_|_| |_| |_|\___|_|  \__,_|\__|_|\___/|_| |_|
+                                                               
 
 nmap -sV -T4 [machine IP]
 Starting Nmap 7.92 ( https://nmap.org ) at 2022-08-27 21:45 UTC
@@ -56,8 +61,6 @@ bm90IHRoaXMgZWFzeSA6RA==
 Cracking this hash reveals: bm90IHRoaXMgZWFzeSA6RA==:not this easy :D (cheeky lol)
 
 /passwd is the same thing
-
-
 
 
 Going to http://[machine IP]:445 gives us another Apache2 default page. Let's try gobuster again:
@@ -113,7 +116,12 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
 
 One of these will come in handy later. But for now, back to the login page to test for SQLi.
 
-[[[WEB SHELL]]]
+ __        __   _       ____  _          _ _ 
+ \ \      / /__| |__   / ___|| |__   ___| | |
+  \ \ /\ / / _ \ '_ \  \___ \| '_ \ / _ \ | |
+   \ V  V /  __/ |_) |  ___) | | | |  __/ | |
+    \_/\_/ \___|_.__/  |____/|_| |_|\___|_|_|
+                                             
 
 Using Burpsuite, I intercepted the login request and sent the request to Intruder with attack type set to Sniper.
 I left the password blank, and set the position to only test the username input.
@@ -147,7 +155,6 @@ Selecting this request and looking at the response tab gives us this message at 
 Use that payload to login to the admin portal. 
 
 
-
 Browsing around, if you click on Administrator Admin at the top right and select "My Account", it gives you an option to choose 
 an avatar. I first tried pentest monkey's php shell to upload, and then went to http://[machine IP]:445/management/uploads to try and execute it, but I did not catch a shell.
 
@@ -174,7 +181,12 @@ Start a listener before executing this with nc:
 
 nc -lvnp port#
 
-[[[PORT_ADMIN]]]
+  ____            _          _       _           _       
+ |  _ \ ___  _ __| |_       / \   __| |_ __ ___ (_)_ __  
+ | |_) / _ \| '__| __|     / _ \ / _` | '_ ` _ \| | '_ \ 
+ |  __/ (_) | |  | |_     / ___ \ (_| | | | | | | | | | |
+ |_|   \___/|_|   \__|___/_/   \_\__,_|_| |_| |_|_|_| |_|
+                    |_____|                              
 
 I found some credentials in a file called initialize.php:
 
@@ -266,7 +278,12 @@ plot_admin@plotted:~$
 
 And success! User.txt is in plot_admin's home folder.
 
-[[[GAINING ROOT]]]
+   ____       _       _               ____             _   
+  / ___| __ _(_)_ __ (_)_ __   __ _  |  _ \ ___   ___ | |_ 
+ | |  _ / _` | | '_ \| | '_ \ / _` | | |_) / _ \ / _ \| __|
+ | |_| | (_| | | | | | | | | | (_| | |  _ < (_) | (_) | |_ 
+  \____|\__,_|_|_| |_|_|_| |_|\__, | |_| \_\___/ \___/ \__|
+                              |___/                        
 
 I tried sudo -l for sudo permissions and was unable to since I do not know plot_admin's password, and then checked SUID,
 to which I found one I have not seen before:
