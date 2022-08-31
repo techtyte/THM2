@@ -1,0 +1,68 @@
+
+
+███████╗███╗   ██╗██╗   ██╗███╗   ███╗███████╗██████╗  █████╗ ████████╗██╗ ██████╗ ███╗   ██╗
+██╔════╝████╗  ██║██║   ██║████╗ ████║██╔════╝██╔══██╗██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║
+█████╗  ██╔██╗ ██║██║   ██║██╔████╔██║█████╗  ██████╔╝███████║   ██║   ██║██║   ██║██╔██╗ ██║
+██╔══╝  ██║╚██╗██║██║   ██║██║╚██╔╝██║██╔══╝  ██╔══██╗██╔══██║   ██║   ██║██║   ██║██║╚██╗██║
+███████╗██║ ╚████║╚██████╔╝██║ ╚═╝ ██║███████╗██║  ██║██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║
+╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+                       https://tryhackme.com/room/enumerationpe
+
+ +-+-+-+-+ +-+-+ +-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+-+-+
+ |T|a|s|k| |3|:| |L|i|n|u|x| |E|n|u|m|e|r|a|t|i|o|n|
+ +-+-+-+-+ +-+-+ +-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+-+-+
+
+
+Question 1: What is the Linux distribution used in the VM?
+Hint: "cat /etc/os-release"
+
+Question 2: What is its version number?
+Hint: The command above will also tell you this
+
+Question 3: What is the name of the user who last logged in to the system?
+Hint: "last"
+
+Question 4: What is the highest listening TCP port number?
+Hint: "sudo netstat -atupn"
+
+Question 5: What is the program name of the service listening on it?
+Hint: Look under PID/program name
+
+Question 6: There is a script running in the background. Its name starts with THM. What is the name of the script? 
+Hint: "ps -e"
+
+
+ +-+-+-+-+ +-+-+ +-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+-+-+
+ |T|a|s|k| |4|:| |W|i|n|d|o|w|s| |E|n|u|m|e|r|a|t|i|o|n|
+ +-+-+-+-+ +-+-+ +-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+-+-+-+
+
+
+Question 1:  What is the full OS Name? 
+Hint: "systeminfo"
+
+Question 2: What is the OS Version?
+Hint: Above command will tell you
+
+Question 3: How many hotfixes are installed on this MS Windows Server?
+Hint: "wmic qfe"
+
+Question 4: What is the lowest TCP port number listening on the system?
+Hint: "netstat -p TCP"
+
+Question 5: What is the name of the program listening on that port?
+Hint: "netstat -bp TCP"
+
+
+ +-+-+-+-+ +-+-+ +-+-+-+-+ +-+-+-+-+ +-+-+-+ +-+-+-+-+
+ |T|a|s|k| |5|:| |D|N|S|,| |S|M|B|,| |a|n|d| |S|N|M|P|
+ +-+-+-+-+ +-+-+ +-+-+-+-+ +-+-+-+-+ +-+-+-+ +-+-+-+-+
+ 
+
+Question 1: What is the flag that you get in the records?
+Hint: "sudo dig -t AXFR redteam.thm @[Machine IP]"
+
+Question 2: What is the name of the share available over SMB protocol and starts with THM?
+Hint: "net share"
+
+Question 3: What is the location specified?
+Hint: "snmpwalk -v1 -c public [Machine IP]"
