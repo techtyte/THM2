@@ -13,7 +13,7 @@
 _\ \ | (__  | (_| | | | | |
 \__/  \___|  \__,_| |_| |_|
                            
-nmap -A -T4 -p- [machine ip]
+{{nmap -A -T4 -p- [machine ip]}}
                            
 Nmap scan report for 10.10.157.84
 Host is up (0.24s latency).
@@ -41,7 +41,7 @@ PORT      STATE    SERVICE      VERSION
 | fingerprint-strings: 
 |   DNSStatusRequestTCP, DNSVersionBindReqTCP, FourOhFourRequest, GenericLines, GetRequest, HTTPOptions, Help, Kerberos, LANDesk-RC, LDAPBindReq, LDAPSearchReq, LPDString, NULL, RPCCheck, RTSPRequest, SIPOptions, SMBProgNeg, SSLSessionReq, TLSSessionReq, TerminalServer, TerminalServerCookie, X11Probe: 
 |     In case I forget - user:pass
-|_    xxxREDACTEDxxx:xxxREDACTEDxxx
+|_    {{REDACTED}}:{{REDACTED}}
 31723/tcp filtered unknown
 32044/tcp filtered unknown
 43034/tcp filtered unknown
@@ -57,6 +57,6 @@ PORT      STATE    SERVICE      VERSION
 
 Use the listed credentials under finderprint-strings to ssh into the machine (the standard port, not 2222):
 
-ssh [username here]@[machine IP]
+{{ssh [username here]@[machine IP]}}
 
 Flag is in /home/user/
