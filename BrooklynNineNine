@@ -40,13 +40,14 @@ Go to the image as listed in the source code (http://[machine IP]/brooklyn99.jpg
 
 In a terminal, let's try steghide to extract whatever is hidden within the image.
 
-steghide extract -sf brooklyn99.jpg
+{{steghide extract -sf brooklyn99.jpg}}
 
 It asks us to enter a passphrase, which we don't have at the moment. Press enter, and it says:
 steghide: can not uncompress data. compressed data is corrupted.
 
 Ignore this, and use stegseek plus the rockyou.txt wordlist to find the passphrase:
-stegseek brooklyn99.jpg rockyou.txt
+
+{{stegseek brooklyn99.jpg rockyou.txt}}
 
 StegSeek 0.6 - https://github.com/RickdeJager/StegSeek
 
@@ -63,7 +64,7 @@ Enjoy!!
 
 This is most likely the SSH password, so let's try that:
 
-ssh holt@[machine IP]
+{{ssh holt@[machine IP]}}
 Enter password at the prompt
 
 And we are able to successfully log in. Grab the user.txt flag in your home folder.
