@@ -1,0 +1,80 @@
+ ██████╗ ██████╗ ██████╗ ██████╗ ██╗██████╗  ██████╗ ██████╗ 
+██╔════╝██╔═══██╗██╔══██╗██╔══██╗██║██╔══██╗██╔═══██╗██╔══██╗
+██║     ██║   ██║██████╔╝██████╔╝██║██║  ██║██║   ██║██████╔╝
+██║     ██║   ██║██╔══██╗██╔══██╗██║██║  ██║██║   ██║██╔══██╗
+╚██████╗╚██████╔╝██║  ██║██║  ██║██║██████╔╝╚██████╔╝██║  ██║
+ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝
+           https://tryhackme.com/room/corridor
+
+"In this challenge, you will explore potential IDOR vulnerabilities. Examine the URL endpoints you access as you navigate the website and note the hexadecimal values you find (they look an awful lot like a hash, don't they?). This could help you uncover website locations you were not expected to access."
+
+----Navigate to http://[Machine IP].
+----Copy each of the end points from each door and save them to a file:
+
+{{nano corridor.hash}}
+
+c4ca4238a0b923820dcc509a6f75849b
+c81e728d9d4c2f636f067f89cc14862c
+eccbc87e4b5ce2fe28308fd9f2a7baf3
+a87ff679a2f3e71d9181a67b7542122c
+e4da3b7fbbce2345d7772b0674a318d5
+1679091c5a880faf6fb5e6087eb1b2dc
+8f14e45fceea167a5a36dedd4bea2543
+c51ce410c124a10e0db5e4b97fc2af39
+c20ad4d76fe97759aa27a0c99bff6710
+6512bd43d9caa6e02c990b0a82652dca
+d3d9446802a44259755d38e6d163e820
+45c48cce2e2d7fbdea1afc51c7c6ad26
+c9f0f895fb98ab9159f51fd0297e236d
+
+----Next, use hash-identifier to determine what kind of hash we are looking at:
+----(https://github.com/blackploit/hash-identifier if you don't have it, hashID is another good one)
+
+{{hash-identifier c9f0f895fb98ab9159f51fd0297e236d}}
+
+   #########################################################################
+   #     __  __                     __           ______    _____           #
+   #    /\ \/\ \                   /\ \         /\__  _\  /\  _ `\         #
+   #    \ \ \_\ \     __      ____ \ \ \___     \/_/\ \/  \ \ \/\ \        #
+   #     \ \  _  \  /'__`\   / ,__\ \ \  _ `\      \ \ \   \ \ \ \ \       #
+   #      \ \ \ \ \/\ \_\ \_/\__, `\ \ \ \ \ \      \_\ \__ \ \ \_\ \      #
+   #       \ \_\ \_\ \___ \_\/\____/  \ \_\ \_\     /\_____\ \ \____/      #
+   #        \/_/\/_/\/__/\/_/\/___/    \/_/\/_/     \/_____/  \/___/  v1.2 #
+   #                                                             By Zion3R #
+   #                                                    www.Blackploit.com #
+   #                                                   Root@Blackploit.com #
+   #########################################################################
+--------------------------------------------------
+
+Possible Hashs:
+[+] MD5
+[+] Domain Cached Credentials - MD4(MD4(($pass)).(strtolower($username)))
+
+----Knowing now that they are most likely MD5, let's use john to decrypt them and see what happens:
+
+{{john --wordlist=/path/to/rockyou.txt --format=raw-md5 corridor.hash}}
+Using default input encoding: UTF-8
+Loaded 13 password hashes with no different salts (Raw-MD5 [MD5 256/256 AVX2 8x3])
+Warning: no OpenMP support for this hash type, consider --fork=12
+Press 'q' or Ctrl-C to abort, almost any other key for status
+1                (?)     
+12               (?)     
+11               (?)     
+13               (?)     
+7                (?)     
+3                (?)     
+10               (?)     
+9                (?)     
+2                (?)     
+6                (?)     
+5                (?)     
+8                (?)     
+4                (?)     
+13g 0:00:00:01 DONE (2022-10-04 20:06) 7.602g/s 7285Kp/s 7285Kc/s 19372KC/s 4 90227..3xqug55
+Use the "--show --format=Raw-MD5" options to display all of the cracked passwords reliably
+Session completed. 	
+
+----With the clue of this being related to exploiting an IDOR vulnerability, try to generate the hashes of other numbers and see if there is a valid endpoint.
+----The generator I used can be found here: https://www.miraclesalad.com/webtools/md5.php
+
+----Keep trying different numbers until you find the correct one ;) This will reveal the flag!
