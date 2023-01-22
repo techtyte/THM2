@@ -1,0 +1,101 @@
+████████╗ █████╗ ██╗  ██╗███████╗ ██████╗ ██╗   ██╗███████╗██████╗ 
+╚══██╔══╝██╔══██╗██║ ██╔╝██╔════╝██╔═══██╗██║   ██║██╔════╝██╔══██╗
+   ██║   ███████║█████╔╝ █████╗  ██║   ██║██║   ██║█████╗  ██████╔╝
+   ██║   ██╔══██║██╔═██╗ ██╔══╝  ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗
+   ██║   ██║  ██║██║  ██╗███████╗╚██████╔╝ ╚████╔╝ ███████╗██║  ██║
+   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝
+                                                                   
+                https://tryhackme.com/room/takeover
+
+--First, we need to add futurevera.thm to the /etc/hosts file:
+
+sudo nano /etc/hosts
+
+--Add this to a new line:
+
+[Machine IP]    futurevera.thm
+
+--Save (Ctrl-X, Y, Enter)
+
+     __                         __                 
+  /\ \ \_ __ ___   __ _ _ __   / _\ ___ __ _ _ __  
+ /  \/ / '_ ` _ \ / _` | '_ \  \ \ / __/ _` | '_ \ 
+/ /\  /| | | | | | (_| | |_) | _\ \ (_| (_| | | | |
+\_\ \/ |_| |_| |_|\__,_| .__/  \__/\___\__,_|_| |_|
+                       |_| 
+                       
+nmap -sV -T4 [Machine IP]
+
+Starting Nmap 7.93 ( https://nmap.org ) at 2023-01-20 15:16 EST
+Nmap scan report for futurevera.thm (10.10.14.162)
+Host is up (0.21s latency).
+Not shown: 997 closed tcp ports (conn-refused)
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 8.2p1 Ubuntu 4ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+80/tcp  open  http     Apache httpd 2.4.41 ((Ubuntu))
+443/tcp open  ssl/http Apache httpd 2.4.41 ((Ubuntu))
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+ __    __  __               
+/ / /\ \ \/ _|_   _ ________
+\ \/  \/ / |_| | | |_  /_  /
+ \  /\  /|  _| |_| |/ / / / 
+  \/  \/ |_|  \__,_/___/___|
+                            
+
+--According to the caption in the room, it says that this challenge revolves around subdomain enumeration.
+
+--I used wfuzz along with the wordlist "subdomains-top1million-5000.txt" from SecLists (available here if it is not on your machine: https://github.com/danielmiessler/SecLists)
+
+--Upon starting the scan, I noticed that all of the false positives had a wordlength of 329, so I ommitted results with that wordlength with the argument --hw 329, and ran the scan again.
+
+wfuzz -w subdomains-top1million-5000.txt -H "Host: FUZZ.futurevera.thm" --hw 329 https://futurevera.thm
+
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: https://futurevera.thm/
+Total requests: 4989
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                                                                                       
+=====================================================================
+
+000000034:   421        12 L     49 W       411 Ch      "support"                                                                                                                                                     
+000000018:   421        12 L     49 W       408 Ch      "blog"  
+
+--I tried multiple, multiple different wordlists and could only find these two subdomains. My next course of action was to try directory brute-forcing.
+
+
+             _               _            
+  __ _  ___ | |__  _   _ ___| |_ ___ _ __ 
+ / _` |/ _ \| '_ \| | | / __| __/ _ \ '__|
+| (_| | (_) | |_) | |_| \__ \ ||  __/ |   
+ \__, |\___/|_.__/ \__,_|___/\__\___|_|   
+ |___/                                    
+
+--While running the scan, I added "https" to the beginning of the URL to see if there would be any difference, as I wasn't getting any hits otherwise. 
+--Doing so gave a very, very nice error:
+
+gobuster dir -u https://support.futurevera.thm -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 200
+===============================================================
+Gobuster v3.4
+by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     https://support.futurevera.thm
+[+] Method:                  GET
+[+] Threads:                 200
+[+] Wordlist:                /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.4
+[+] Timeout:                 10s
+===============================================================
+2023/01/20 19:14:33 Starting gobuster in directory enumeration mode
+===============================================================
+
+Error: error on running gobuster: unable to connect to https://support.futurevera.thm/: invalid certificate: x509: certificate is valid for [REDACTED].support.futurevera.thm, not support.futurevera.thm
+
+
+--Add that URL to /etc/hosts, and visit the page. The flag is in the URL bar. Congrats!
